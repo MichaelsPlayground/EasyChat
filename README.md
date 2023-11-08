@@ -2,6 +2,10 @@
 
 Welcome to the Firebase Chat App repository! This app enables real-time chat functionality using Firebase as the backend. Below is a list of key files and their functionalities:
 
+Source: https://github.com/bimalkaf/Android_Chat_Application
+
+Video Tutorial: https://www.youtube.com/watch?v=jHH-ZreOs1k
+
 ## Activity Files
 
 - `ChatActivity.java`: The main activity for individual chat conversations.
