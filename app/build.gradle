@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.example.easychat'
+    namespace 'de.androidcrypto.easychat'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.example.easychat"
+        applicationId "de.androidcrypto.easychat"
         minSdk 26
         targetSdk 33
         versionCode 1

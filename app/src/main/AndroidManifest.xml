@@ -19,49 +19,49 @@
             android:resource="@color/my_primary"/>
 
         <activity
-            android:name=".ChatActivity"
+            android:name="de.androidcrypto.easychat.ChatActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
         <activity
-            android:name=".SearchUserActivity"
+            android:name="de.androidcrypto.easychat.SearchUserActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
         <activity
-            android:name=".LoginEmailPasswordActivity"
+            android:name="de.androidcrypto.easychat.LoginEmailPasswordActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
         <activity
-            android:name=".LoginUsernameActivity"
+            android:name="de.androidcrypto.easychat.LoginUsernameActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
         <activity
-            android:name=".LoginOtpActivity"
+            android:name="de.androidcrypto.easychat.LoginOtpActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
         <activity
-            android:name=".LoginPhoneNumberActivity"
+            android:name="de.androidcrypto.easychat.LoginPhoneNumberActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
         <activity
-            android:name=".SplashActivity"
+            android:name="de.androidcrypto.easychat.SplashActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -74,13 +74,13 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name="de.androidcrypto.easychat.MainActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
-        <service android:name=".FCMNotificationService" android:exported="false">
+        <service android:name="de.androidcrypto.easychat.FCMNotificationService" android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>

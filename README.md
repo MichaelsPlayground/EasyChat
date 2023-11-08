@@ -44,3 +44,59 @@ To use this app:
 For more details about Firebase services and Android app development, refer to the official [Firebase Documentation](https://firebase.google.com/docs) and [Android Documentation](https://developer.android.com/docs).
 
 Happy coding!
+
+## Firebase console settings
+
+### Authentication provider
+
+The original version of this app worked with "**Phone number authentication**" - I changed this to 
+"**Email & Password**" authentication (without any verification).
+
+### Firestore rules
+
+```plaintext
+// Allow read/write access on all documents to any user signed in to the application
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
+
+Note: when running the app the first time you will find some errors in your logcat:
+```plaintext
+onError
+com.google.firebase.firestore.FirebaseFirestoreException: FAILED_PRECONDITION: 
+The query requires an index. You can create it here: 
+https://console.firebase.google.com/v1/r/project/easychat..xxx
+	at com.google.firebase.firestore.util.Util.exceptionFromStatus(Util.java:113)
+...
+```
+The means that the Firestore database needs one or more indexes. Click on the link and allow to 
+create indexes or see Firebase console / Firestore Database / Indexes
+
+### Storage rules
+
+```plaintext
+rules_version = '2';
+
+// Craft rules based on data in your Firestore database
+// allow write: if firestore.get(
+//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
+
+### Firebase Cloud Messaging
+
+"*Conversion measurement and most targeting options require Google Analytics, 
+which is currently not enabled for this project*"
+
+t.b.d.
