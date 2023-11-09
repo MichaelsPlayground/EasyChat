@@ -5,6 +5,8 @@ import static android.app.Activity.RESULT_OK;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,15 +41,25 @@ import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 import de.androidcrypto.easychat.adapter.ImageAdapter;
 import de.androidcrypto.easychat.adapter.StorageDirectoriesAdapter;
 import de.androidcrypto.easychat.adapter.StorageFileAdapter;
+import de.androidcrypto.easychat.adapter.StorageReferenceAdapter;
 import de.androidcrypto.easychat.model.ImageModel;
 import de.androidcrypto.easychat.model.StorageFileModel;
 import de.androidcrypto.easychat.model.UserModel;
@@ -56,12 +68,12 @@ import de.androidcrypto.easychat.utils.FirebaseUtil;
 
 public class StorageFragment extends Fragment {
 
-    Button storageListDirectories, selectImage, uploadImage, listImages, uploadFile;
+    Button storageListDirectories, selectImage, uploadImage, listImages, listFilesForDownload, uploadFile;
     RecyclerView storageRecyclerView;
 
     //ImageView profilePic;
-    EditText usernameInput;
-    EditText phoneInput;
+    //EditText usernameInput;
+    //EditText phoneInput;
     Button updateProfileBtn;
     ProgressBar progressBar;
     TextView logoutBtn;
@@ -106,13 +118,14 @@ public class StorageFragment extends Fragment {
         selectImage = view.findViewById(R.id.storage_select_image_btn);
         uploadImage = view.findViewById(R.id.storage_upload_image_btn);
         listImages = view.findViewById(R.id.storage_list_images_btn);
+        listFilesForDownload = view.findViewById(R.id.storage_list_files_for_download_btn);
         selectedImageView = view.findViewById(R.id.storage_image_view);
         progressIndicator = view.findViewById(R.id.storage_progress);
         //uploadFile = view.findViewById(R.id.storage_upload_file_btn);
 
         //profilePic = view.findViewById(R.id.profile_image_view);
-        usernameInput = view.findViewById(R.id.profile_username);
-        phoneInput = view.findViewById(R.id.profile_phone);
+        //usernameInput = view.findViewById(R.id.profile_username);
+        //phoneInput = view.findViewById(R.id.profile_phone);
         updateProfileBtn = view.findViewById(R.id.profle_update_btn);
         progressBar = view.findViewById(R.id.profile_progress_bar);
         logoutBtn = view.findViewById(R.id.logout_btn);
@@ -146,6 +159,19 @@ public class StorageFragment extends Fragment {
                     while (i.hasNext()) {
                         ref = i.next();
                         System.out.println("onSuccess() File name: " + ref.getName());
+                        System.out.println("*** ref.downloadUrl: " + ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                // Got the download URL for 'users/me/profile.png'
+                                System.out.println("*** uri: " + uri + " ***");
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception exception) {
+                                // Handle any errors
+                                System.out.println("### Error: " + exception.getMessage() + " ###");
+                            }
+                        }));
                         arrayList.add(ref.getName());
                     }
                     /*
@@ -164,6 +190,8 @@ public class StorageFragment extends Fragment {
                         @Override
                         public void onClick(String directory) {
                             //startActivity(new Intent(getActivity(), LoginEmailPasswordActivity.class).putExtra("directory", directory));
+
+                            System.out.println("directory: " + directory + " ***");
 
                             StorageReference reference = FirebaseStorage.getInstance().getReference().child(Objects.requireNonNull(directory));
                             reference.listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
@@ -228,7 +256,7 @@ public class StorageFragment extends Fragment {
         listImages.setOnClickListener((v -> {
             String actualUserId = FirebaseAuth.getInstance().getUid();
             FirebaseStorage.getInstance().getReference().child(actualUserId).child("images").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
-            //FirebaseStorage.getInstance().getReference().child("images").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
+                //FirebaseStorage.getInstance().getReference().child("images").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
                 @Override
                 public void onSuccess(ListResult listResult) {
                     ArrayList<ImageModel> arrayList = new ArrayList<>();
@@ -270,10 +298,8 @@ public class StorageFragment extends Fragment {
         }));
 
 
-        getUserData();
-
         updateProfileBtn.setOnClickListener((v -> {
-            updateBtnClick();
+
         }));
 
         logoutBtn.setOnClickListener((v) -> {
@@ -292,18 +318,168 @@ public class StorageFragment extends Fragment {
 
         });
 
-        /*
-        profilePic.setOnClickListener((v)->{
-            ImagePicker.with(this).cropSquare().compress(512).maxResultSize(512,512)
-                    .createIntent(new Function1<Intent, Unit>() {
+        listFilesForDownload.setOnClickListener((v -> {
+
+            // this is listing the profile_pic directory
+            /*
+            String startDirectory = "profile_pic";
+            FirebaseStorage storage = FirebaseStorage.getInstance();
+            StorageReference reference = storage.getReference();
+            StorageReference reference1 = reference.child("profile_pic2");
+
+             */
+            //StorageReference reference = FirebaseStorage.getInstance().getReference().child(Objects.requireNonNull(startDirectory));
+
+            // this lis listing from the root
+            StorageReference reference = FirebaseStorage.getInstance().getReference();
+            String actualUserId = FirebaseAuth.getInstance().getUid();
+            FirebaseStorage.getInstance().getReference().child(actualUserId).child("images").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
+                @Override
+                public void onSuccess(ListResult listResult) {
+                    ArrayList<StorageFileModel> arrayList = new ArrayList<>();
+                    ArrayList<StorageReference> arrayListSR = new ArrayList<>();
+                    Iterator<StorageReference> i = listResult.getItems().iterator();
+                    StorageReference ref;
+                    while (i.hasNext()) {
+                        ref = i.next();
+                        arrayListSR.add(ref);
+                        StorageFileModel sfm = new StorageFileModel();
+                        sfm.setName(ref.getName());
+                        System.out.println("onSuccess() File name: " + ref.getName());
+                        System.out.println("*** ref.downloadUrl: " + ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                // Got the download URL for 'users/me/profile.png'
+                                System.out.println("*** uri: " + uri + " ***");
+                                sfm.setUri(uri);
+                                arrayList.add(sfm);
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception exception) {
+                                // Handle any errors
+                                System.out.println("### Error: " + exception.getMessage() + " ###");
+                            }
+                        }));
+
+                    }
+                    /*
+                    ArrayList<String> arrayList = new ArrayList<>();
+                    for (StorageReference prefix : listResult.getPrefixes()) {
+                        arrayList.add(prefix.getName());
+                        System.out.println("*** added: " + prefix.getName());
+                    }
+
+                     */
+
+                    System.out.println("*** arrayList has entries: " + arrayList.size() + " ***");
+
+                    StorageReferenceAdapter adapterSR = new StorageReferenceAdapter(getContext(), arrayListSR);
+                    storageRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+                    storageRecyclerView.setAdapter(adapterSR);
+                    adapterSR.setOnItemClickListener(new StorageReferenceAdapter.OnItemClickListener() {
                         @Override
-                        public Unit invoke(Intent intent) {
-                            imagePickLauncher.launch(intent);
-                            return null;
+                        public void onClick(StorageReference storageReference) {
+                            System.out.println("*** clicked on name: " + storageReference.getName());
+
+                            // get the download url from task
+                            storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                @Override
+                                public void onSuccess(Uri uri) {
+                                    // Got the download URL for 'users/me/profile.png'
+                                    System.out.println("*** uri: " + uri + " ***");
+
+                                    ExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+                                    Handler handler = new Handler(Looper.getMainLooper());
+
+                                    executor.execute(new Runnable() {
+
+                                        int count;
+
+                                        @Override
+                                        public void run() {
+
+                                            //Background work here
+                                            try {
+
+                                                // put your url.this is sample url.
+                                                URL url = new URL(uri.toString());
+                                                URLConnection conection = url.openConnection();
+                                                conection.connect();
+
+                                                int lengthOfFile = conection.getContentLength();
+                                                System.out.println("*** lengthOfFile: " + lengthOfFile);
+
+                                                // download the file
+
+                                                InputStream input = conection.getInputStream();
+
+                                                //catalogfile is your destenition folder
+                                                OutputStream output = Files.newOutputStream(Paths.get("video.mp4"));
+
+
+                                                byte[] data = new byte[1024];
+
+                                                long total = 0;
+
+                                                while ((count = input.read(data)) != -1) {
+                                                    total += count;
+                                                    // publishing the progress....
+
+
+                                                    //publishProgress(Integer.valueOf("" + (int) ((total * 100) / lenghtOfFile)));
+
+                                                    // writing data to file
+                                                    output.write(data, 0, count);
+                                                }
+
+                                                // flushing output
+                                                output.flush();
+
+                                                // closing streams
+                                                output.close();
+                                                input.close();
+
+
+                                                handler.post(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        //UI Thread work here
+                                                        progressBar.setVisibility(View.GONE);
+
+                                                    }
+                                                });
+                                            } catch (Exception e) {
+
+                                            }
+                                        }
+                                    });
+
+
+
+
+
+
+
+
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception exception) {
+                                    // Handle any errors
+                                    System.out.println("### Error: " + exception.getMessage() + " ###");
+                                }
+                            });
                         }
                     });
-        });
-        */
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Toast.makeText(getActivity(), "There was an error while listing files", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }));
 
         return view;
     }
@@ -347,22 +523,7 @@ public class StorageFragment extends Fragment {
 
 
     void updateBtnClick() {
-        String newUsername = usernameInput.getText().toString();
-        if (newUsername.isEmpty() || newUsername.length() < 3) {
-            usernameInput.setError("Username length should be at least 3 chars");
-            return;
-        }
-        currentUserModel.setUsername(newUsername);
-        setInProgress(true);
 
-        if (selectedImageUri != null) {
-            FirebaseUtil.getCurrentProfilePicStorageRef().putFile(selectedImageUri)
-                    .addOnCompleteListener(task -> {
-                        updateToFirestore();
-                    });
-        } else {
-            updateToFirestore();
-        }
     }
 
 
@@ -398,25 +559,6 @@ public class StorageFragment extends Fragment {
 
     void getUserData() {
         setInProgress(true);
-
-        /*
-        FirebaseUtil.getCurrentProfilePicStorageRef().getDownloadUrl()
-                        .addOnCompleteListener(task -> {
-                                if(task.isSuccessful()){
-                                    Uri uri  = task.getResult();
-                                    AndroidUtil.setProfilePic(getContext(),uri,profilePic);
-                                }
-                        });
-
-         */
-
-        FirebaseUtil.currentUserDetails().get().addOnCompleteListener(task -> {
-            setInProgress(false);
-            currentUserModel = task.getResult().toObject(UserModel.class);
-            usernameInput.setText(currentUserModel.getUsername());
-            // todo change name phoneInput to emailInput
-            phoneInput.setText(currentUserModel.getEmail());
-        });
     }
 
 

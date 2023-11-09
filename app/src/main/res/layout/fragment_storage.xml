@@ -57,29 +57,14 @@
         android:text="list images"
         android:id="@+id/storage_list_images_btn"/>
 
-    <EditText
+    <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:hint="Username"
-        android:inputType="text"
-        android:layout_margin="10dp"
-        android:background="@drawable/edit_text_rounded_corner"
-        android:elevation="5dp"
-        android:id="@+id/profile_username"
-        />
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:hint="Phone"
-        android:inputType="text"
-        android:layout_margin="10dp"
-        android:background="@drawable/edit_text_rounded_corner"
-        android:elevation="5dp"
-        android:enabled="false"
-        android:id="@+id/profile_phone"
-        />
+        android:layout_marginTop="24dp"
+        android:background="@drawable/btn_rounded_corner"
+        android:text="list files for download"
+        android:id="@+id/storage_list_files_for_download_btn"/>
+
 
     <LinearLayout
         android:layout_width="match_parent"
