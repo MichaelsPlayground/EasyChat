@@ -6,6 +6,13 @@ Source: https://github.com/bimalkaf/Android_Chat_Application
 
 Video Tutorial: https://www.youtube.com/watch?v=jHH-ZreOs1k
 
+This is an updated version of the original repository - it uses Gradle 8.12 and the latest dependencies  
+of Firebase, Google Services and other dependencies.
+
+You can choose a profile image from your local gallery or take a photo with the camera.
+
+Please note that the Notification service is not running at the moment.
+
 ## Activity Files
 
 - `ChatActivity.java`: The main activity for individual chat conversations.
@@ -50,7 +57,8 @@ Happy coding!
 ### Authentication provider
 
 The original version of this app worked with "**Phone number authentication**" - I changed this to 
-"**Email & Password**" authentication (without any verification).
+"**Email & Password**" authentication (without any verification). You can signup and login with an 
+Email address and a password (minimum length is 6 characters). 
 
 ### Firestore rules
 
