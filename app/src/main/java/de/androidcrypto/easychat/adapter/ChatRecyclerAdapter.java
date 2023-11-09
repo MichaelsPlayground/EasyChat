@@ -32,10 +32,12 @@ public class ChatRecyclerAdapter extends FirestoreRecyclerAdapter<ChatMessageMod
           holder.leftChatLayout.setVisibility(View.GONE);
           holder.rightChatLayout.setVisibility(View.VISIBLE);
           holder.rightChatTextview.setText(model.getMessage());
+          holder.rightChatTimeTextview.setText(FirebaseUtil.timestampFullToString(model.getTimestamp())); // added
        }else{
            holder.rightChatLayout.setVisibility(View.GONE);
            holder.leftChatLayout.setVisibility(View.VISIBLE);
            holder.leftChatTextview.setText(model.getMessage());
+           holder.leftChatTimeTextview.setText(FirebaseUtil.timestampFullToString(model.getTimestamp())); // added
        }
     }
 
@@ -50,6 +52,7 @@ public class ChatRecyclerAdapter extends FirestoreRecyclerAdapter<ChatMessageMod
 
         LinearLayout leftChatLayout,rightChatLayout;
         TextView leftChatTextview,rightChatTextview;
+        TextView leftChatTimeTextview, rightChatTimeTextview; // added
 
         public ChatModelViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -58,6 +61,8 @@ public class ChatRecyclerAdapter extends FirestoreRecyclerAdapter<ChatMessageMod
             rightChatLayout = itemView.findViewById(R.id.right_chat_layout);
             leftChatTextview = itemView.findViewById(R.id.left_chat_textview);
             rightChatTextview = itemView.findViewById(R.id.right_chat_textview);
+            leftChatTimeTextview = itemView.findViewById(R.id.left_chat_time_textview); // added
+            rightChatTimeTextview = itemView.findViewById(R.id.right_chat_time_textview); // added
         }
     }
 }

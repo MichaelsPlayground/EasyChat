@@ -117,3 +117,24 @@ Server key = API key: AAAAceXXnNk:APA91bGl1YFfTu8oJmiZrIzuc4uv9P2CZnLouAmBAx_vIK
 
 See this page for a running example: https://github.com/firebase/quickstart-android/tree/master/messaging/app/src/main/java/com/google/firebase/quickstart/fcm/java
 
+Notice: Firebase Cloud Messaging HTTP protocol https://firebase.google.com/docs/cloud-messaging/http-server-ref: 
+*Caution: Sending messages (including upstream messages) with the FCM XMPP and HTTP legacy APIs was deprecated on June 20, 2023, and will be 
+removed in June 2024. If you are using the legacy send APIs, we strongly recommend that you migrate to the HTTP v1 API or consider using the 
+Admin SDK to build send requests.*
+
+See the migration guide to a better format here:
+
+**Migrate from legacy FCM APIs to HTTP v1**: https://firebase.google.com/docs/cloud-messaging/migrate-v1#java
+
+https://github.com/firebase/snippets-java/blob/master/admin/src/main/java/com/google/firebase/example/FirebaseRemoteConfigSnippets.java
+
+https://github.com/firebase/quickstart-java/blob/master/messaging/src/main/java/com/google/firebase/quickstart/Messaging.java
+
+Necessary dependencies for the new API:
+```plaintext
+implementation 'com.google.auth:google-auth-library-oauth2-http:1.3.0'
+implementation 'platform(com.google.firebase:firebase-bom:31.0.2)'
+
+implementation 'com.google.firebase:firebase-analytics'
+implementation 'com.google.firebase:firebase-messaging:23.1.0'
+```
