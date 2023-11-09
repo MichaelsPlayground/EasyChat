@@ -1,5 +1,7 @@
 package de.androidcrypto.easychat;
 
+import static android.app.Activity.RESULT_OK;
+
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -8,32 +10,45 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.ListResult;
+import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.UUID;
+import java.util.function.Consumer;
 
+import de.androidcrypto.easychat.adapter.ImageAdapter;
 import de.androidcrypto.easychat.adapter.StorageDirectoriesAdapter;
 import de.androidcrypto.easychat.adapter.StorageFileAdapter;
+import de.androidcrypto.easychat.model.ImageModel;
 import de.androidcrypto.easychat.model.StorageFileModel;
 import de.androidcrypto.easychat.model.UserModel;
 import de.androidcrypto.easychat.utils.AndroidUtil;
@@ -41,7 +56,7 @@ import de.androidcrypto.easychat.utils.FirebaseUtil;
 
 public class StorageFragment extends Fragment {
 
-    Button storageListDirectories;
+    Button storageListDirectories, selectImage, uploadImage, listImages, uploadFile;
     RecyclerView storageRecyclerView;
 
     //ImageView profilePic;
@@ -53,7 +68,11 @@ public class StorageFragment extends Fragment {
 
     UserModel currentUserModel;
     ActivityResultLauncher<Intent> imagePickLauncher;
+    ImageView selectedImageView;
     Uri selectedImageUri;
+
+    StorageReference storageReference;
+    LinearProgressIndicator progressIndicator;
 
     public StorageFragment() {
 
@@ -80,10 +99,16 @@ public class StorageFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view =  inflater.inflate(R.layout.fragment_storage, container, false);
+        View view = inflater.inflate(R.layout.fragment_storage, container, false);
 
         storageListDirectories = view.findViewById(R.id.storage_list_directories_btn);
         storageRecyclerView = view.findViewById(R.id.storage_recyclerview);
+        selectImage = view.findViewById(R.id.storage_select_image_btn);
+        uploadImage = view.findViewById(R.id.storage_upload_image_btn);
+        listImages = view.findViewById(R.id.storage_list_images_btn);
+        selectedImageView = view.findViewById(R.id.storage_image_view);
+        progressIndicator = view.findViewById(R.id.storage_progress);
+        //uploadFile = view.findViewById(R.id.storage_upload_file_btn);
 
         //profilePic = view.findViewById(R.id.profile_image_view);
         usernameInput = view.findViewById(R.id.profile_username);
@@ -91,6 +116,10 @@ public class StorageFragment extends Fragment {
         updateProfileBtn = view.findViewById(R.id.profle_update_btn);
         progressBar = view.findViewById(R.id.profile_progress_bar);
         logoutBtn = view.findViewById(R.id.logout_btn);
+
+        storageRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        storageReference = FirebaseStorage.getInstance().getReference();
 
         // see https://github.com/Everyday-Programmer/Firebase-Directory-Listing-Android/tree/main/app/src/main/java/com/example/firebasefileslisting
         storageListDirectories.setOnClickListener((v -> {
@@ -108,7 +137,7 @@ public class StorageFragment extends Fragment {
             // this lis listing from the root
             StorageReference reference = FirebaseStorage.getInstance().getReference();
 
-            reference.child("profile_pic").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
+            reference.child("images").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
                 @Override
                 public void onSuccess(ListResult listResult) {
                     ArrayList<String> arrayList = new ArrayList<>();
@@ -186,6 +215,60 @@ public class StorageFragment extends Fragment {
             });
         }));
 
+        selectImage.setOnClickListener((v -> {
+            Intent intent = new Intent(Intent.ACTION_PICK);
+            intent.setType("image/*");
+            activityResultLauncher.launch(intent);
+        }));
+
+        uploadImage.setOnClickListener((v -> {
+            uploadImage(selectedImageUri);
+        }));
+
+        listImages.setOnClickListener((v -> {
+            String actualUserId = FirebaseAuth.getInstance().getUid();
+            FirebaseStorage.getInstance().getReference().child(actualUserId).child("images").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
+            //FirebaseStorage.getInstance().getReference().child("images").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
+                @Override
+                public void onSuccess(ListResult listResult) {
+                    ArrayList<ImageModel> arrayList = new ArrayList<>();
+                    ImageAdapter adapter = new ImageAdapter(getContext(), arrayList);
+                    adapter.setOnItemClickListener(new ImageAdapter.OnItemClickListener() {
+                        @Override
+                        public void onClick(ImageModel image) {
+                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(image.getUrl()));
+                            intent.setDataAndType(Uri.parse(image.getUrl()), "image/*");
+                            startActivity(intent);
+                        }
+                    });
+                    storageRecyclerView.setAdapter(adapter);
+                    listResult.getItems().forEach(new Consumer<StorageReference>() {
+                        @Override
+                        public void accept(StorageReference storageReference) {
+                            ImageModel image = new ImageModel();
+                            image.setName(storageReference.getName());
+                            storageReference.getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Uri> task) {
+                                    String url = "https://" + task.getResult().getEncodedAuthority() + task.getResult().getEncodedPath() + "?alt=media&token=" + task.getResult().getQueryParameters("token").get(0);
+                                    image.setUrl(url);
+                                    arrayList.add(image);
+                                    adapter.notifyDataSetChanged();
+                                }
+                            });
+
+                        }
+                    });
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Toast.makeText(getContext(), "Failed to retrieve images", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+        }));
+
 
         getUserData();
 
@@ -193,19 +276,18 @@ public class StorageFragment extends Fragment {
             updateBtnClick();
         }));
 
-        logoutBtn.setOnClickListener((v)->{
+        logoutBtn.setOnClickListener((v) -> {
             FirebaseMessaging.getInstance().deleteToken().addOnCompleteListener(new OnCompleteListener<Void>() {
                 @Override
                 public void onComplete(@NonNull Task<Void> task) {
-                    if(task.isSuccessful()){
+                    if (task.isSuccessful()) {
                         FirebaseUtil.logout();
-                        Intent intent = new Intent(getContext(),SplashActivity.class);
+                        Intent intent = new Intent(getContext(), SplashActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);
                     }
                 }
             });
-
 
 
         });
@@ -226,46 +308,95 @@ public class StorageFragment extends Fragment {
         return view;
     }
 
-    void updateBtnClick(){
+    void uploadFileBtnClick() {
+
+
+    }
+
+    void uploadImageBtnClick() {
+        // https://github.com/Everyday-Programmer/Upload-Image-to-Firebase-Android
+
+
+    }
+
+    private void uploadImage(Uri file) {
+        System.out.println("*** uploadImageUri: " + file);
+        String actualUserId = FirebaseAuth.getInstance().getUid();
+        StorageReference ref = storageReference.child(actualUserId).child("images/" + UUID.randomUUID().toString());
+        ref.putFile(file).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                System.out.println("*** upload onSuccess");
+                Toast.makeText(getContext(), "Image Uploaded!!", Toast.LENGTH_LONG).show();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                System.out.println("*** upload onFailure");
+                Toast.makeText(getContext(), "Failed!" + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onProgress(@NonNull UploadTask.TaskSnapshot snapshot) {
+                progressIndicator.setMax(Math.toIntExact(snapshot.getTotalByteCount()));
+                progressIndicator.setProgress(Math.toIntExact(snapshot.getBytesTransferred()));
+            }
+        });
+
+    }
+
+
+    void updateBtnClick() {
         String newUsername = usernameInput.getText().toString();
-        if(newUsername.isEmpty() || newUsername.length()<3){
+        if (newUsername.isEmpty() || newUsername.length() < 3) {
             usernameInput.setError("Username length should be at least 3 chars");
             return;
         }
         currentUserModel.setUsername(newUsername);
         setInProgress(true);
 
-
-        if(selectedImageUri!=null){
+        if (selectedImageUri != null) {
             FirebaseUtil.getCurrentProfilePicStorageRef().putFile(selectedImageUri)
                     .addOnCompleteListener(task -> {
                         updateToFirestore();
                     });
-        }else{
+        } else {
             updateToFirestore();
         }
-
-
-
-
-
     }
 
-    void updateToFirestore(){
+
+    private final ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
+        @Override
+        public void onActivityResult(ActivityResult result) {
+            if (result.getResultCode() == RESULT_OK) {
+                if (result.getData() != null) {
+                    uploadImage.setEnabled(true);
+                    selectedImageUri = result.getData().getData();
+                    System.out.println("*** selectedImageUri: " + selectedImageUri);
+                    Glide.with(requireContext()).load(selectedImageUri).into(selectedImageView);
+                }
+            } else {
+                Toast.makeText(getActivity(), "Please select an image", Toast.LENGTH_SHORT).show();
+            }
+        }
+    });
+
+
+    void updateToFirestore() {
         FirebaseUtil.currentUserDetails().set(currentUserModel)
                 .addOnCompleteListener(task -> {
                     setInProgress(false);
-                    if(task.isSuccessful()){
-                        AndroidUtil.showToast(getContext(),"Updated successfully");
-                    }else{
-                        AndroidUtil.showToast(getContext(),"Updated failed");
+                    if (task.isSuccessful()) {
+                        AndroidUtil.showToast(getContext(), "Updated successfully");
+                    } else {
+                        AndroidUtil.showToast(getContext(), "Updated failed");
                     }
                 });
     }
 
 
-
-    void getUserData(){
+    void getUserData() {
         setInProgress(true);
 
         /*
@@ -289,11 +420,11 @@ public class StorageFragment extends Fragment {
     }
 
 
-    void setInProgress(boolean inProgress){
-        if(inProgress){
+    void setInProgress(boolean inProgress) {
+        if (inProgress) {
             progressBar.setVisibility(View.VISIBLE);
             updateProfileBtn.setVisibility(View.GONE);
-        }else{
+        } else {
             progressBar.setVisibility(View.GONE);
             updateProfileBtn.setVisibility(View.VISIBLE);
         }

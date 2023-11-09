@@ -5,12 +5,12 @@
     android:layout_height="match_parent"
     tools:context="de.androidcrypto.easychat.StorageFragment"
     android:orientation="vertical"
-    android:gravity="center"
     android:layout_margin="20dp">
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
         android:background="@drawable/btn_rounded_corner"
         android:text="List directories in STORAGE"
         android:id="@+id/storage_list_directories_btn"/>
@@ -19,6 +19,43 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/storage_recyclerview"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/btn_rounded_corner"
+        android:text="select image"
+        android:id="@+id/storage_select_image_btn"/>
+
+    <ImageView
+        android:layout_width="300sp"
+        android:layout_height="300sp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20sp"
+        android:id="@+id/storage_image_view"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/btn_rounded_corner"
+        android:text="upload image"
+        android:id="@+id/storage_upload_image_btn"/>
+
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:id="@+id/storage_progress"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/btn_rounded_corner"
+        android:text="list images"
+        android:id="@+id/storage_list_images_btn"/>
 
     <EditText
         android:layout_width="match_parent"
