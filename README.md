@@ -11,7 +11,7 @@ of Firebase, Google Services and other dependencies.
 
 You can choose a profile image from your local gallery or take a photo with the camera.
 
-Please note that the Notification service is not running at the moment.
+Please note that the Notification service is now running. On a real device with Android SDK 26 it does not play any sound.
 
 ## Activity Files
 

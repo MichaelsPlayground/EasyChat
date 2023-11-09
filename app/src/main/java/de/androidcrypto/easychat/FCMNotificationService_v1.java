@@ -16,22 +16,21 @@ package de.androidcrypto.easychat;
  * limitations under the License.
  */
 
-import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.os.Build;
-import androidx.core.app.NotificationCompat;
 import android.util.Log;
+
+import androidx.core.app.NotificationCompat;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
-
-import androidx.work.OneTimeWorkRequest;
-import androidx.work.WorkManager;
 
 /**
  * NOTE: There can only be one service in each app that receives FCM messages. If multiple
@@ -45,11 +44,12 @@ import androidx.work.WorkManager;
  * </intent-filter>
  */
 
-public class FCMNotificationService extends FirebaseMessagingService {
+public class FCMNotificationService_v1 extends FirebaseMessagingService {
 
     /**
      * code taken from https://github.com/firebase/quickstart-android/blob/master/messaging/app/src/main/java/com/google/firebase/quickstart/fcm/java/MyFirebaseMessagingService.java
      */
+
     private static final String TAG = "MyFirebaseMsgService";
 
     /**
@@ -173,26 +173,37 @@ public class FCMNotificationService extends FirebaseMessagingService {
 
         String channelId = getString(R.string.default_notification_channel_id);
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        Uri customSoundUri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.little_bell_14606);
+
         NotificationCompat.Builder notificationBuilder =
                 new NotificationCompat.Builder(this, channelId)
+                        //.setSmallIcon(R.drawable.ic_stat_ic_notification)
                         .setSmallIcon(R.drawable.ic_baseline_notification_important_24)
                         .setContentTitle(getString(R.string.fcm_message))
                         .setContentText(messageBody)
                         .setAutoCancel(true)
                         .setSound(defaultSoundUri)
-                        .setContentIntent(pendingIntent);
+                        //.setSound(customSoundUri)
+                        .setContentIntent(pendingIntent)
+                        .setLights(Color.MAGENTA, 1000, 1000);
 
         NotificationManager notificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
+        /* is created in MainActivity
         // Since android Oreo notification channel is needed.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(channelId,
                     "Channel human readable title",
                     NotificationManager.IMPORTANCE_DEFAULT);
+            AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .build();
+            channel.setSound(customSoundUri, audioAttributes);
             notificationManager.createNotificationChannel(channel);
-        }
-
-        notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
+        }*/
+        notificationManager.notify(1 /* ID of notification */, notificationBuilder.build());
     }
+
 }
