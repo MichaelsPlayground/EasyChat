@@ -90,20 +90,12 @@ public class LoginEmailPasswordActivity extends AppCompatActivity {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "createUserWithEmail:success");
                             //FirebaseUser user = mAuth.getCurrentUser();
-                            //updateUI(user);
                             setUserEmail();
-                            /*
-                            userModel = new UserModel(email,email, Timestamp.now(),FirebaseUtil.currentUserId());
-                            Intent intent = new Intent(LoginEmailPasswordActivity.this,MainActivity.class);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
-                            startActivity(intent);
-                            */
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(TAG, "createUserWithEmail:failure", task.getException());
                             Toast.makeText(view.getContext(), "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
-                            //updateUI(null);
                         }
 
                         // todo hideProgressBar();
@@ -114,34 +106,42 @@ public class LoginEmailPasswordActivity extends AppCompatActivity {
 
     private void loginUser(View view) {
         // todo loginUser is missing !
-    }
-
-    // todo don't use this method any longer
-    void setUsername(){
-
-        String username = usernameInput.getText().toString();
-        if(username.isEmpty() || username.length()<3){
-            usernameInput.setError("Username length should be at least 3 chars");
+        String email = usernameInput.getText().toString().trim();
+        if(email.isEmpty() || email.length() < 5){
+            usernameInput.setError("Email length should be at least 5 chars");
             return;
         }
-        setInProgress(true);
-        if(userModel!=null){
-            userModel.setUsername(username);
-        }else{
-            userModel = new UserModel(phoneNumber,username, Timestamp.now(),FirebaseUtil.currentUserId());
+        String password = passwordInput.getText().toString();
+        if(password.isEmpty() || password.length() < 6){
+            passwordInput.setError("Password length should be at least 6 chars");
+            return;
         }
+        // todo validate email address, see EmailPasswordFragment.java validateForm
+        // todo use progressbar
+        progressBar.setVisibility(View.VISIBLE);
 
-        FirebaseUtil.currentUserDetails().set(userModel).addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                setInProgress(false);
-                if(task.isSuccessful()){
-                   Intent intent = new Intent(LoginEmailPasswordActivity.this,MainActivity.class);
-                   intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
-                   startActivity(intent);
-                }
-            }
-        });
+        mAuth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(LoginEmailPasswordActivity.this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            // Sign in success, update UI with the signed-in user's information
+                            Log.d(TAG, "signInWithEmail:success");
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            setUserEmail();
+                        } else {
+                            // If sign in fails, display a message to the user.
+                            Log.w(TAG, "signInWithEmail:failure", task.getException());
+                            Toast.makeText(view.getContext(), "Authentication failed.",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+
+                        // todo hideProgressBar();
+                        progressBar.setVisibility(View.GONE);
+                    }
+                });
+
+
     }
 
     private void setUserEmail() {

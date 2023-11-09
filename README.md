@@ -99,4 +99,12 @@ service firebase.storage {
 "*Conversion measurement and most targeting options require Google Analytics, 
 which is currently not enabled for this project*"
 
+Use credentials to mint access tokens: https://firebase.google.com/docs/cloud-messaging/auth-server?authuser=0#use-credentials-to-mint-access-tokens
+
+Project overview - Cloud Messaging - Sender ID: 489187417305
+
+Don't forget to **enable** the service !
+
+Server key = API key: AAAAceXXnNk:APA91bGl1YFfTu8oJmiZrIzuc4uv9P2CZnLouAmBAx_vIKVXy3Gb8cQEFSv9yngFIU_fXOzcAP6B-img6MOJzUQ-aWTbsbBxbGbPEJ1mAaSNy-cfI9xqBt4p5LyFD90tDWAffaUx3Vkr
+
 t.b.d.

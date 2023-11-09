@@ -41,10 +41,10 @@ public class FirebaseUtil {
     }
 
     public static String getChatroomId(String userId1,String userId2){
-        if(userId1.hashCode()<userId2.hashCode()){
-            return userId1+"_"+userId2;
+        if(userId1.hashCode() < userId2.hashCode()){
+            return userId1 + "_" + userId2;
         }else{
-            return userId2+"_"+userId1;
+            return userId2 + "_" + userId1;
         }
     }
 
@@ -61,19 +61,20 @@ public class FirebaseUtil {
     }
 
     public static String timestampToString(Timestamp timestamp){
-        return new SimpleDateFormat("HH:MM").format(timestamp.toDate());
+        // todo error correction: changed SimpleDateFormat("HH:MM") to SimpleDateFormat("HH:mm")
+        return new SimpleDateFormat("HH:mm").format(timestamp.toDate());
     }
 
     public static void logout(){
         FirebaseAuth.getInstance().signOut();
     }
 
-    public static StorageReference  getCurrentProfilePicStorageRef(){
+    public static StorageReference getCurrentProfilePicStorageRef(){
         return FirebaseStorage.getInstance().getReference().child("profile_pic")
                 .child(FirebaseUtil.currentUserId());
     }
 
-    public static StorageReference  getOtherProfilePicStorageRef(String otherUserId){
+    public static StorageReference getOtherProfilePicStorageRef(String otherUserId){
         return FirebaseStorage.getInstance().getReference().child("profile_pic")
                 .child(otherUserId);
     }

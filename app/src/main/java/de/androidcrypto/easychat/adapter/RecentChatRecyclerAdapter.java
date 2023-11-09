@@ -20,6 +20,7 @@ import de.androidcrypto.easychat.utils.AndroidUtil;
 import de.androidcrypto.easychat.utils.FirebaseUtil;
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
+import com.google.firebase.Timestamp;
 
 public class RecentChatRecyclerAdapter extends FirestoreRecyclerAdapter<ChatroomModel, RecentChatRecyclerAdapter.ChatroomModelViewHolder> {
 
@@ -37,7 +38,6 @@ public class RecentChatRecyclerAdapter extends FirestoreRecyclerAdapter<Chatroom
                         if(task.isSuccessful()){
                             boolean lastMessageSentByMe = model.getLastMessageSenderId().equals(FirebaseUtil.currentUserId());
 
-
                             UserModel otherUserModel = task.getResult().toObject(UserModel.class);
 
                             FirebaseUtil.getOtherProfilePicStorageRef(otherUserModel.getUserId()).getDownloadUrl()
@@ -49,11 +49,17 @@ public class RecentChatRecyclerAdapter extends FirestoreRecyclerAdapter<Chatroom
                                     });
 
                             holder.usernameText.setText(otherUserModel.getUsername());
-                            if(lastMessageSentByMe)
-                                holder.lastMessageText.setText("You : "+model.getLastMessage());
-                            else
+                            if(lastMessageSentByMe) {
+                                holder.lastMessageText.setText("You : " + model.getLastMessage());
+                            }
+                            else {
                                 holder.lastMessageText.setText(model.getLastMessage());
+                            }
                             holder.lastMessageTime.setText(FirebaseUtil.timestampToString(model.getLastMessageTimestamp()));
+
+                            // todo remove after test
+                            Timestamp lastTime = model.getLastMessageTimestamp();
+                            System.out.println("*** lastTime: " + FirebaseUtil.timestampToString(lastTime) + " ***");
 
                             holder.itemView.setOnClickListener(v -> {
                                 //navigate to chat activity

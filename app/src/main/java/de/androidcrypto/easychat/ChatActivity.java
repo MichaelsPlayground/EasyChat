@@ -174,11 +174,9 @@ public class ChatActivity extends AppCompatActivity {
 
                    callApi(jsonObject);
 
-
                }catch (Exception e){
 
                }
-
            }
        });
 
@@ -192,7 +190,7 @@ public class ChatActivity extends AppCompatActivity {
         Request request = new Request.Builder()
                 .url(url)
                 .post(body)
-                .header("Authorization","Bearer YOUR_API_KEY")
+                .header("Authorization","489187417305")
                 .build();
         client.newCall(request).enqueue(new Callback() {
             @Override
