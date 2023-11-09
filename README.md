@@ -115,4 +115,5 @@ Don't forget to **enable** the service !
 
 Server key = API key: AAAAceXXnNk:APA91bGl1YFfTu8oJmiZrIzuc4uv9P2CZnLouAmBAx_vIKVXy3Gb8cQEFSv9yngFIU_fXOzcAP6B-img6MOJzUQ-aWTbsbBxbGbPEJ1mAaSNy-cfI9xqBt4p5LyFD90tDWAffaUx3Vkr
 
-t.b.d.
+See this page for a running example: https://github.com/firebase/quickstart-android/tree/master/messaging/app/src/main/java/com/google/firebase/quickstart/fcm/java
+
