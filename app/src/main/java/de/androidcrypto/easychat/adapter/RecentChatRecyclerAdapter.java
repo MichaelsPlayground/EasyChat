@@ -56,11 +56,6 @@ public class RecentChatRecyclerAdapter extends FirestoreRecyclerAdapter<Chatroom
                                 holder.lastMessageText.setText(model.getLastMessage());
                             }
                             holder.lastMessageTime.setText(FirebaseUtil.timestampToString(model.getLastMessageTimestamp()));
-
-                            // todo remove after test
-                            Timestamp lastTime = model.getLastMessageTimestamp();
-                            System.out.println("*** lastTime: " + FirebaseUtil.timestampToString(lastTime) + " ***");
-
                             holder.itemView.setOnClickListener(v -> {
                                 //navigate to chat activity
                                 Intent intent = new Intent(context, ChatActivity.class);
