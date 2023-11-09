@@ -5,12 +5,6 @@
         android:icon="@drawable/chat_icon"
         android:id="@+id/menu_chat"
         />
-
-    <item android:title="Files"
-        android:icon="@drawable/outline_file_present_24_black"
-        android:id="@+id/menu_storage"
-        />
-
     <item android:title="Profile"
         android:icon="@drawable/person_icon"
         android:id="@+id/menu_profile"

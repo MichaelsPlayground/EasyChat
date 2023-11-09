@@ -13,5 +13,5 @@ dependencyResolutionManagement {
         maven { url "https://jitpack.io" }
     }
 }
-rootProject.name = "Easy Chat"
+rootProject.name = "Easy Chat Ext"
 include ':app'

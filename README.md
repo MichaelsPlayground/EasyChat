@@ -1,4 +1,6 @@
-# Firebase Chat App
+# Firebase Chat App Extended
+
+Note: This is an extended version of the original "Android_Chat_Application".
 
 Welcome to the Firebase Chat App repository! This app enables real-time chat functionality using Firebase as the backend. Below is a list of key files and their functionalities:
 
@@ -6,7 +8,7 @@ Source: https://github.com/bimalkaf/Android_Chat_Application
 
 Video Tutorial: https://www.youtube.com/watch?v=jHH-ZreOs1k
 
-This is an updated version of the original repository - it uses Gradle 8.12 and the latest dependencies  
+This is an updated version of the original repository - it uses Gradle 8.13 and the latest dependencies  
 of Firebase, Google Services and other dependencies.
 
 You can choose a profile image from your local gallery or take a photo with the camera.
