@@ -4,6 +4,15 @@ import android.net.Uri;
 public class StorageFileModel {
     private String name;
     private Uri uri;
+    private String downloadUrl;
+
+    public StorageFileModel() {
+    }
+    public StorageFileModel(String name, Uri uri, String downloadUrl) {
+        this.name = name;
+        this.uri = uri;
+        this.downloadUrl = downloadUrl;
+    }
 
     public String getName() {
         return name;
@@ -19,5 +28,13 @@ public class StorageFileModel {
 
     public void setUri(Uri uri) {
         this.uri = uri;
+    }
+
+    public String getDownloadUrl() {
+        return downloadUrl;
+    }
+
+    public void setDownloadUrl(String downloadUrl) {
+        this.downloadUrl = downloadUrl;
     }
 }
