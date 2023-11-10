@@ -2,6 +2,7 @@ package de.androidcrypto.easychat;
 
 import static android.app.Activity.RESULT_OK;
 
+import android.app.Activity;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
@@ -10,6 +11,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.DocumentsContract;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,9 +50,11 @@ import com.google.firebase.storage.UploadTask;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.CookieManager;
 import java.net.URL;
@@ -81,7 +86,7 @@ import okhttp3.Response;
 
 public class StorageFragment extends Fragment {
 
-    Button storageListDirectories, selectImage, uploadImage, listImages, listFilesForDownload, uploadFile;
+    Button storageListDirectories, selectImage, uploadImage, listImages, listFilesForDownload, selectFile, uploadFile;
     RecyclerView storageRecyclerView;
 
     //ImageView profilePic;
@@ -94,7 +99,7 @@ public class StorageFragment extends Fragment {
     UserModel currentUserModel;
     ActivityResultLauncher<Intent> imagePickLauncher;
     ImageView selectedImageView;
-    Uri selectedImageUri;
+    Uri selectedFileUri, selectedImageUri;
 
     StorageReference storageReference;
     LinearProgressIndicator progressIndicator;
@@ -134,7 +139,10 @@ public class StorageFragment extends Fragment {
         listFilesForDownload = view.findViewById(R.id.storage_list_files_for_download_btn);
         selectedImageView = view.findViewById(R.id.storage_image_view);
         progressIndicator = view.findViewById(R.id.storage_progress);
-        //uploadFile = view.findViewById(R.id.storage_upload_file_btn);
+
+        selectFile = view.findViewById(R.id.storage_select_file_btn);
+        uploadFile = view.findViewById(R.id.storage_upload_file_btn);
+
 
         //profilePic = view.findViewById(R.id.profile_image_view);
         //usernameInput = view.findViewById(R.id.profile_username);
@@ -523,7 +531,73 @@ public class StorageFragment extends Fragment {
             });
         }));
 
+        selectFile.setOnClickListener((v -> {
+            selectFileBtnClick();
+        }));
+
+
+        uploadFile.setOnClickListener((v -> {
+            //uploadImage(selectedImageUri);
+
+
+        }));
+
         return view;
+    }
+
+    void selectFileBtnClick() {
+        // https://developer.android.com/training/data-storage/shared/documents-files
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        // Optionally, specify a URI for the file that should appear in the
+        // system file picker when it loads.
+        boolean pickerInitialUri = false;
+        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
+        fileChooserActivityResultLauncher.launch(intent);
+    }
+
+    ActivityResultLauncher<Intent> fileChooserActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        // There are no request codes
+                        Intent resultData = result.getData();
+                        // The result data contains a URI for the document or directory that
+                        // the user selected.
+                        if (resultData != null) {
+                            selectedFileUri = resultData.getData();
+                            // Perform operations on the document using its URI.
+                            try {
+                                String fileContent = readTextFromUri(selectedFileUri);
+                                Toast.makeText(getContext(), "Content: " + fileContent, Toast.LENGTH_LONG).show();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                                Toast.makeText(getContext(), "Error on reading the file", Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    }
+                }
+            });
+
+    private String readTextFromUri(Uri uri) throws IOException {
+        if (uri != null) {
+            StringBuilder stringBuilder = new StringBuilder();
+            //try (InputStream inputStream = getContentResolver().openInputStream(uri);
+            try (InputStream inputStream = getContext().getContentResolver().openInputStream(uri);
+                 BufferedReader reader = new BufferedReader(
+                         new InputStreamReader(Objects.requireNonNull(inputStream)))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    stringBuilder.append(line + "\n");
+                }
+            }
+            return stringBuilder.toString();
+        } else {
+            return "";
+        }
     }
 
     void uploadFileBtnClick() {
