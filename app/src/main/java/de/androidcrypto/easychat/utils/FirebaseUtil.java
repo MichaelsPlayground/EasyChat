@@ -18,7 +18,7 @@ public class FirebaseUtil {
     }
 
     public static boolean isLoggedIn(){
-        if(currentUserId()!=null){
+        if(currentUserId() != null){
             return true;
         }
         return false;
@@ -58,6 +58,11 @@ public class FirebaseUtil {
         }else{
             return allUserCollectionReference().document(userIds.get(0));
         }
+    }
+
+    // appended
+    public static CollectionReference currentUserFilesCollectionReference(){
+        return FirebaseFirestore.getInstance().collection("users").document(currentUserId()).collection("files");
     }
 
     public static String timestampToString(Timestamp timestamp){

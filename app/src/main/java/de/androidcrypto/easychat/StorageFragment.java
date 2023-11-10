@@ -699,6 +699,8 @@ public class StorageFragment extends Fragment {
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 System.out.println("*** upload onSuccess");
                 Toast.makeText(getContext(), "File Uploaded!!", Toast.LENGTH_LONG).show();
+                ref.getDownloadUrl();
+                //addFileInformationToUserCollection(fileInformation, ref.);
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -714,6 +716,60 @@ public class StorageFragment extends Fragment {
             }
         });
 
+    }
+
+    private void uploadFile2(Uri uri) {
+        System.out.println("*** uploadFileUri: " + uri);
+        String actualUserId = FirebaseAuth.getInstance().getUid();
+        // trying to get the original filename from uri
+        FileInformation fileInformation = getFileInformationFromUri(uri);
+        StorageReference ref;
+        if ( TextUtils.isEmpty(fileInformation.getFileName())) {
+            ref = storageReference.child(actualUserId).child("files/" + UUID.randomUUID().toString() + ".abc");
+        } else {
+            ref = storageReference.child(actualUserId).child("files/" + fileInformation.getFileName());
+        }
+
+        UploadTask uploadTask = ref.putFile(uri);
+
+
+
+
+
+        ref.putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                System.out.println("*** upload onSuccess");
+                Toast.makeText(getContext(), "File Uploaded!!", Toast.LENGTH_LONG).show();
+                ref.getDownloadUrl();
+                //addFileInformationToUserCollection(fileInformation, ref.);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                System.out.println("*** upload onFailure");
+                Toast.makeText(getContext(), "Failed!" + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onProgress(@NonNull UploadTask.TaskSnapshot snapshot) {
+                progressIndicator.setMax(Math.toIntExact(snapshot.getTotalByteCount()));
+                progressIndicator.setProgress(Math.toIntExact(snapshot.getBytesTransferred()));
+            }
+        });
+
+    }
+
+    private void addFileInformationToUserCollection(StorageReference storageReference, FileInformation fileInformation) {
+        FirebaseUtil.currentUserFilesCollectionReference().document(storageReference.toString()).set(fileInformation)
+                .addOnCompleteListener(task -> {
+                    setInProgress(false);
+                    if (task.isSuccessful()) {
+                        AndroidUtil.showToast(getContext(), "Filestore entry added successfully");
+                    } else {
+                        AndroidUtil.showToast(getContext(), "Filestore entry adding failed");
+                    }
+                });
     }
 
 

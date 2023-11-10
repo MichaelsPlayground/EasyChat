@@ -131,10 +131,6 @@ public class ProfileFragment extends Fragment {
             updateToFirestore();
         }
 
-
-
-
-
     }
 
     void updateToFirestore(){
