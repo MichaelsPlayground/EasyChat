@@ -275,7 +275,9 @@ public class StorageFragment extends Fragment {
         }));
 
         uploadImage.setOnClickListener((v -> {
-            uploadImage(selectedImageUri);
+            if (selectedImageUri != null) {
+                uploadImage(selectedImageUri);
+            }
         }));
 
         listImages.setOnClickListener((v -> {
@@ -649,11 +651,18 @@ public class StorageFragment extends Fragment {
         return new FileInformation(mimeType, fileName, fileSize);
     }
 
-    private void uploadImage(Uri file) {
-        System.out.println("*** uploadImageUri: " + file);
+    private void uploadImage(Uri uri) {
+        System.out.println("*** uploadImageUri: " + uri);
         String actualUserId = FirebaseAuth.getInstance().getUid();
-        StorageReference ref = storageReference.child(actualUserId).child("images/" + UUID.randomUUID().toString());
-        ref.putFile(file).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+        // trying to get the original filename from uri
+        FileInformation fileInformation = getFileInformationFromUri(uri);
+        StorageReference ref;
+        if ( TextUtils.isEmpty(fileInformation.getFileName())) {
+            ref = storageReference.child(actualUserId).child("images/" + UUID.randomUUID().toString() + ".jpg");
+        } else {
+            ref = storageReference.child(actualUserId).child("images/" + fileInformation.getFileName());
+        }
+        ref.putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 System.out.println("*** upload onSuccess");
