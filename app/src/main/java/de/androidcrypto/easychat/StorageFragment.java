@@ -14,6 +14,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.DocumentsContract;
 import android.provider.OpenableColumns;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -615,7 +616,7 @@ public class StorageFragment extends Fragment {
 
     }
 
-    private FileInformation retrieveFileInformationFromUri(Uri uri) {
+    private FileInformation getFileInformationFromUri(Uri uri) {
         /*
          * Get the file's content URI from the incoming Intent,
          * then query the server app to get the file's display name
@@ -673,11 +674,18 @@ public class StorageFragment extends Fragment {
         });
     }
 
-    private void uploadFile(Uri file) {
-        System.out.println("*** uploadFileUri: " + file);
+    private void uploadFile(Uri uri) {
+        System.out.println("*** uploadFileUri: " + uri);
         String actualUserId = FirebaseAuth.getInstance().getUid();
-        StorageReference ref = storageReference.child(actualUserId).child("files/" + UUID.randomUUID().toString());
-        ref.putFile(file).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+        // trying to get the original filename from uri
+        FileInformation fileInformation = getFileInformationFromUri(uri);
+        StorageReference ref;
+        if ( TextUtils.isEmpty(fileInformation.getFileName())) {
+            ref = storageReference.child(actualUserId).child("files/" + UUID.randomUUID().toString() + ".abc");
+        } else {
+            ref = storageReference.child(actualUserId).child("files/" + fileInformation.getFileName());
+        }
+        ref.putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 System.out.println("*** upload onSuccess");
