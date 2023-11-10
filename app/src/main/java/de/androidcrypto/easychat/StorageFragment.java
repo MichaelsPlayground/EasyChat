@@ -6,12 +6,14 @@ import android.app.Activity;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.DocumentsContract;
+import android.provider.OpenableColumns;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -73,6 +75,7 @@ import de.androidcrypto.easychat.adapter.ImageAdapter;
 import de.androidcrypto.easychat.adapter.StorageDirectoriesAdapter;
 import de.androidcrypto.easychat.adapter.StorageFileAdapter;
 import de.androidcrypto.easychat.adapter.StorageReferenceAdapter;
+import de.androidcrypto.easychat.model.FileInformation;
 import de.androidcrypto.easychat.model.ImageModel;
 import de.androidcrypto.easychat.model.StorageFileModel;
 import de.androidcrypto.easychat.model.UserModel;
@@ -537,9 +540,7 @@ public class StorageFragment extends Fragment {
 
 
         uploadFile.setOnClickListener((v -> {
-            //uploadImage(selectedImageUri);
-
-
+            uploadFileBtnClick();
         }));
 
         return view;
@@ -570,6 +571,8 @@ public class StorageFragment extends Fragment {
                         if (resultData != null) {
                             selectedFileUri = resultData.getData();
                             // Perform operations on the document using its URI.
+                            // todo get filename from uri
+                            // https://developer.android.com/training/secure-file-sharing/retrieve-info
                             try {
                                 String fileContent = readTextFromUri(selectedFileUri);
                                 Toast.makeText(getContext(), "Content: " + fileContent, Toast.LENGTH_LONG).show();
@@ -601,14 +604,48 @@ public class StorageFragment extends Fragment {
     }
 
     void uploadFileBtnClick() {
-
-
+        if (selectedFileUri != null) {
+            uploadFile(selectedFileUri);
+        }
     }
 
     void uploadImageBtnClick() {
         // https://github.com/Everyday-Programmer/Upload-Image-to-Firebase-Android
 
 
+    }
+
+    private FileInformation retrieveFileInformationFromUri(Uri uri) {
+        /*
+         * Get the file's content URI from the incoming Intent,
+         * then query the server app to get the file's display name
+         * and size.
+         */
+        Context context = getContext();
+        if (context == null) return null;
+        Cursor returnCursor = null;
+        String mimeType = "";
+        String fileName = "";
+        long fileSize = 0;
+        try {
+            returnCursor = context.getContentResolver().query(uri, null, null, null, null);
+            mimeType = context.getContentResolver().getType(uri);
+            /*
+             * Get the column indexes of the data in the Cursor,
+             * move to the first row in the Cursor, get the data,
+             * and display it.
+             */
+            int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+            int sizeIndex = returnCursor.getColumnIndex(OpenableColumns.SIZE);
+            returnCursor.moveToFirst();
+            fileName = returnCursor.getString(nameIndex);
+            fileSize = returnCursor.getLong(sizeIndex);
+        } catch (NullPointerException e) {
+            //
+        } finally {
+            returnCursor.close();
+        }
+        return new FileInformation(mimeType, fileName, fileSize);
     }
 
     private void uploadImage(Uri file) {
@@ -620,6 +657,31 @@ public class StorageFragment extends Fragment {
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 System.out.println("*** upload onSuccess");
                 Toast.makeText(getContext(), "Image Uploaded!!", Toast.LENGTH_LONG).show();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                System.out.println("*** upload onFailure");
+                Toast.makeText(getContext(), "Failed!" + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onProgress(@NonNull UploadTask.TaskSnapshot snapshot) {
+                progressIndicator.setMax(Math.toIntExact(snapshot.getTotalByteCount()));
+                progressIndicator.setProgress(Math.toIntExact(snapshot.getBytesTransferred()));
+            }
+        });
+    }
+
+    private void uploadFile(Uri file) {
+        System.out.println("*** uploadFileUri: " + file);
+        String actualUserId = FirebaseAuth.getInstance().getUid();
+        StorageReference ref = storageReference.child(actualUserId).child("files/" + UUID.randomUUID().toString());
+        ref.putFile(file).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                System.out.println("*** upload onSuccess");
+                Toast.makeText(getContext(), "File Uploaded!!", Toast.LENGTH_LONG).show();
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
