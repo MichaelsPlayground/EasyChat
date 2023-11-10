@@ -2,14 +2,18 @@ package de.androidcrypto.easychat;
 
 import static android.app.Activity.RESULT_OK;
 
+import android.app.DownloadManager;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.URLUtil;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -41,9 +45,13 @@ import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.CookieManager;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Files;
@@ -65,6 +73,11 @@ import de.androidcrypto.easychat.model.StorageFileModel;
 import de.androidcrypto.easychat.model.UserModel;
 import de.androidcrypto.easychat.utils.AndroidUtil;
 import de.androidcrypto.easychat.utils.FirebaseUtil;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class StorageFragment extends Fragment {
 
@@ -388,7 +401,41 @@ public class StorageFragment extends Fragment {
                                 public void onSuccess(Uri uri) {
                                     // Got the download URL for 'users/me/profile.png'
                                     System.out.println("*** uri: " + uri + " ***");
+/*
+                                    OkHttpClient client = new OkHttpClient();
 
+                                    Request getRequest = new Request.Builder()
+                                            .url(uri.toString())
+                                            //.url("https://mytodoserver.com/todolist")
+                                            .build();
+
+                                    client.newCall(getRequest).enqueue(new Callback() {
+                                        @Override
+                                        public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                                            e.printStackTrace();
+                                        }
+
+                                        @Override
+                                        public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                                            System.out.println("onResponse");
+                                            System.out.println(response.body().string());
+                                            InputStream is = response.body().byteStream();
+                                        }
+                                    });
+*/
+                                    DownloadManager.Request request = new DownloadManager.Request(uri);
+                                    String title = URLUtil.guessFileName(uri.toString(), null, null);
+                                    request.setTitle(title);
+                                    request.setDescription("Downloading file, please wait");
+                                    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
+                                    request.setDestinationInExternalFilesDir(getContext(), Environment.DIRECTORY_DOWNLOADS, "");
+                                    //request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, title);
+                                    DownloadManager manager = (DownloadManager) getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
+                                    long reference = manager.enqueue(request);
+                                    System.out.println("reference: " + reference);
+                                    Toast.makeText(getActivity(), "Downloading started, please wait...", Toast.LENGTH_LONG).show();
+
+/*
                                     ExecutorService executor = Executors.newSingleThreadScheduledExecutor();
                                     Handler handler = new Handler(Looper.getMainLooper());
 
@@ -455,12 +502,7 @@ public class StorageFragment extends Fragment {
                                         }
                                     });
 
-
-
-
-
-
-
+*/
 
                                 }
                             }).addOnFailureListener(new OnFailureListener() {
