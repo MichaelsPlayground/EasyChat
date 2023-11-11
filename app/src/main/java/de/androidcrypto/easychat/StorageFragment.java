@@ -53,6 +53,7 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -79,6 +80,7 @@ import de.androidcrypto.easychat.utils.FirebaseUtil;
 public class StorageFragment extends Fragment {
 
     Button storageListDirectories, selectImage, uploadImage, listImages, listFilesForDownload, selectFile, uploadFile;
+    Button encryptFile, decryptFile;
     RecyclerView storageRecyclerView;
 
     //ImageView profilePic;
@@ -95,7 +97,7 @@ public class StorageFragment extends Fragment {
 
     StorageReference storageReference;
     LinearProgressIndicator progressIndicator;
-
+    private String encryptedFilename = "";
 
     public StorageFragment() {
 
@@ -136,6 +138,8 @@ public class StorageFragment extends Fragment {
         selectFile = view.findViewById(R.id.storage_select_file_btn);
         uploadFile = view.findViewById(R.id.storage_upload_file_btn);
 
+        encryptFile = view.findViewById(R.id.storage_encrypt_file_btn);
+        decryptFile = view.findViewById(R.id.storage_decrypt_file_btn);
 
         //profilePic = view.findViewById(R.id.profile_image_view);
         //usernameInput = view.findViewById(R.id.profile_username);
@@ -358,8 +362,8 @@ public class StorageFragment extends Fragment {
             // this lists listing from the root
             StorageReference reference = FirebaseStorage.getInstance().getReference();
             String actualUserId = FirebaseAuth.getInstance().getUid();
-            FirebaseStorage.getInstance().getReference().child(actualUserId).child("images").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
-            //FirebaseStorage.getInstance().getReference().child(actualUserId).child("files").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
+            //FirebaseStorage.getInstance().getReference().child(actualUserId).child("images").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
+            FirebaseStorage.getInstance().getReference().child(actualUserId).child("files").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
                 @Override
                 public void onSuccess(ListResult listResult) {
                     ArrayList<StorageFileModel> arrayList = new ArrayList<>();
@@ -424,6 +428,7 @@ public class StorageFragment extends Fragment {
                                     request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
                                     //request.setDestinationInExternalFilesDir(getContext(), Environment.DIRECTORY_DOWNLOADS, "");
                                     request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, title);
+
                                     DownloadManager manager = (DownloadManager) getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
                                     //Registering receiver in Download Manager
                                     getActivity().registerReceiver(onCompleted, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
@@ -487,6 +492,14 @@ public class StorageFragment extends Fragment {
 
         uploadFile.setOnClickListener((v -> {
             uploadFileBtnClick();
+        }));
+
+        encryptFile.setOnClickListener((v -> {
+            encryptFileBtnClick();
+        }));
+
+        decryptFile.setOnClickListener((v -> {
+            decryptFileBtnClick();
         }));
 
         return view;
@@ -726,6 +739,101 @@ public class StorageFragment extends Fragment {
         }
     });
 
+    /**
+     * section for encryption and decryption of a file
+     */
+
+    private void encryptFileBtnClick() {
+        // select a file from download folder and encrypt it to internal storage, both by using uris
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        // Optionally, specify a URI for the file that should appear in the
+        // system file picker when it loads.
+        boolean pickerInitialUri = false;
+        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
+        fileEncryptChooserActivityResultLauncher.launch(intent);
+    }
+
+    ActivityResultLauncher<Intent> fileEncryptChooserActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        // There are no request codes
+                        Intent resultData = result.getData();
+                        // The result data contains a URI for the document or directory that
+                        // the user selected.
+                        if (resultData != null) {
+                            selectedFileUri = resultData.getData();
+                            FileInformation fileInformation = getFileInformationFromUri(selectedFileUri);
+                            Toast.makeText(getContext(), "You selected this file: " + fileInformation.getFileName()
+                                    + " with size: " + fileInformation.getFileSize(), Toast.LENGTH_SHORT).show();
+                            char[] passphrase = "123456".toCharArray();
+                            int iterations = 1000;
+                            String cacheFilename = fileInformation.getFileName() + ".enc";
+                            encryptedFilename = new File(getContext().getCacheDir(), cacheFilename).getAbsolutePath();
+
+                            boolean success = Cryptography.encryptGcmFileBufferedCipherOutputStreamToCacheFile(getContext(), selectedFileUri, encryptedFilename, passphrase, iterations);
+                            Toast.makeText(getActivity(), "encryptGcmFileBufferedCipherOutputStreamToCacheFile: " + success, Toast.LENGTH_SHORT).show();
+
+                            //uploadFile.setEnabled(true);
+                            // Perform operations on the document using its URI.
+                            // todo get filename from uri
+                            // https://developer.android.com/training/secure-file-sharing/retrieve-info
+
+                        }
+                    }
+                }
+            });
+
+    private void decryptFileBtnClick() {
+        // select a file from internal storage and decrypt it to download folder, both by using uris
+
+        // todo work on this, filename should be given from the real one
+
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        // Optionally, specify a URI for the file that should appear in the
+        // system file picker when it loads.
+        //boolean pickerInitialUri = false;
+        //intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
+        // todo strip the last extension with ".enc off
+        intent.putExtra(Intent.EXTRA_TITLE, encryptedFilename);
+        fileDecryptSaverActivityResultLauncher.launch(intent);
+    }
+
+    ActivityResultLauncher<Intent> fileDecryptSaverActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        // There are no request codes
+                        Intent resultData = result.getData();
+                        // The result data contains a URI for the document or directory that
+                        // the user selected.
+                        Uri selectedUri = null;
+                        if (resultData != null) {
+                            selectedUri = resultData.getData();
+                            // Perform operations on the document using its URI.
+                            Toast.makeText(getContext(), "You selected this file for decryption: " + selectedUri.toString(), Toast.LENGTH_SHORT).show();
+
+                            char[] passphrase = "123456".toCharArray();
+                            int iterations = 1000;
+                            //String cacheFilename = fileInformation.getFileName() + ".enc";
+                            //String encryptedFilename = new File(getContext().getCacheDir(), encryptedFilename;
+
+                            boolean success = Cryptography.decryptGcmFileBufferedCipherInputStreamFromCache(getContext(), encryptedFilename, selectedUri, passphrase, iterations);
+                            Toast.makeText(getActivity(), "decryptGcmFileBufferedCipherOutputStreamFromCache: " + success, Toast.LENGTH_SHORT).show();
+
+
+                        }
+                    }
+                }
+            });
 
     void updateToFirestore() {
         FirebaseUtil.currentUserDetails().set(currentUserModel)
