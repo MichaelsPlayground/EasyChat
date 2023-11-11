@@ -22,13 +22,16 @@ import de.androidcrypto.easychat.utils.FirebaseUtil;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.Query;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 
 import okhttp3.Call;
@@ -131,6 +134,7 @@ public class ChatActivity extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             messageInput.setText("");
                             sendNotification(message);
+                            //sendNotificationV1(message);
                         }
                     }
                 });
@@ -170,7 +174,9 @@ public class ChatActivity extends AppCompatActivity {
                     notificationObj.put("sound", "little_bell_14606.mp3");
                     notificationObj.put("android_channel_id",R.string.default_notification_channel_id);
                     jsonObject.put("notification", notificationObj);
-                    /*
+
+
+/* old
                     JSONObject jsonObject = new JSONObject();
                     JSONObject notificationObj = new JSONObject();
                     notificationObj.put("title", currentUser.getUsername());
@@ -181,14 +187,151 @@ public class ChatActivity extends AppCompatActivity {
                     jsonObject.put("data", dataObj);
                     jsonObject.put("to", otherUser.getFcmToken());
                     */
+/*
+                    // example
+                    String token = otherUser.getFcmToken();
+                    JSONObject messageJs = new JSONObject();
+                    JSONObject to = new JSONObject();
+                    JSONObject data = new JSONObject();
+                    try {
+                        data.put("title", "Notification");
+                        data.put("body", "you have 1 notification");
+
+                        to.put("token", token);
+                        to.put("data", data);
+
+                        messageJs.put("message", to);
+                        if (token != null) {
+                            callApiHttpV1(messageJs);
+                        }
+                    } catch (Exception e) {
+                        System.out.println("*** Exception1: " + e.getMessage());
+                    }
+*/
                     callApi(jsonObject);
                 } catch (Exception e) {
-
+                    System.out.println("*** Exception2: " + e.getMessage());
                 }
             }
         });
 
     }
+
+    void sendNotificationV1(String message) {
+
+        FirebaseUtil.currentUserDetails().get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                UserModel currentUser = task.getResult().toObject(UserModel.class);
+
+                try {
+                    JSONObject jsonObject = new JSONObject();
+
+                    jsonObject.put("to", otherUser.getFcmToken());
+
+                JSONObject notificationObj = new JSONObject();
+                    notificationObj.put("title", currentUser.getUsername());
+                    notificationObj.put("body", message);
+                    notificationObj.put("icon", "icon_for_splash");
+                    notificationObj.put("sound", "little_bell_14606.mp3");
+                    notificationObj.put("android_channel_id",R.string.default_notification_channel_id);
+                    jsonObject.put("notification", notificationObj);
+                    callApiHttpV1(jsonObject);
+                } catch (JSONException e) {
+                    //throw new RuntimeException(e);
+                    System.out.println("*** JSONException: " + e.getMessage());
+                }
+/* old
+                    JSONObject jsonObject = new JSONObject();
+                    JSONObject notificationObj = new JSONObject();
+                    notificationObj.put("title", currentUser.getUsername());
+                    notificationObj.put("body", message);
+                    JSONObject dataObj = new JSONObject();
+                    dataObj.put("userId", currentUser.getUserId());
+                    jsonObject.put("notification", notificationObj);
+                    jsonObject.put("data", dataObj);
+                    jsonObject.put("to", otherUser.getFcmToken());
+                    */
+
+
+
+            }
+        });
+
+    }
+
+    void callApiHttpV1(JSONObject jsonObject) {
+        System.out.println("*** callApiHttpV1: " + jsonObject);
+        MediaType JSON = MediaType.get("application/json; charset=utf-8");
+        OkHttpClient client = new OkHttpClient();
+        //String url = "https://fcm.googleapis.com/fcm/send";
+        String NOTIFICATION_URL = "https://fcm.googleapis.com/v1/projects/easychat-ce2c5/messages:send" ;
+        String MESSAGING_SCOPE = "https://www.googleapis.com/auth/firebase.messaging";
+        String[] SCOPES = { MESSAGING_SCOPE };
+
+        // todo remove after test
+        System.out.println("*** callApiHttpV1 for notification ***");
+        System.out.println("*** jsonObject: " + jsonObject.toString());
+        String accessToken = "";
+        try {
+            accessToken = getAccessToken();
+        } catch (IOException e) {
+            //throw new RuntimeException(e);
+            System.out.println("RunTime : " + e.getMessage());
+        }
+        System.out.println("*** access token: " + accessToken);
+
+        RequestBody body = RequestBody.create(jsonObject.toString(), JSON);
+        Request request = null;
+        request = new Request.Builder()
+                .url(NOTIFICATION_URL)
+                .post(body)
+                .header("Authorization", "Bearer " + accessToken)
+                .build();
+        System.out.println("*** request: " + request.toString());
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                System.out.println("*** callApi onFailure: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                System.out.println("*** callApi onResponse: " + response.toString());
+            }
+
+        });
+        System.out.println("*** call api v1 ended");
+    }
+
+    private String getAccessToken() throws IOException {
+        final String MESSAGING_SCOPE = "https://www.googleapis.com/auth/firebase.messaging";
+        final String[] SCOPES = { MESSAGING_SCOPE };
+        InputStream inputStream = getResources().openRawResource(R.raw.service_account);
+
+        GoogleCredentials googleCredential = GoogleCredentials
+                .fromStream(inputStream)
+                .createScoped(Arrays.asList(SCOPES));
+        googleCredential.refresh();
+
+        //Log.i("TAGggg", "getAccessToken: " + googleCredential.toString());
+        System.out.println("*** getAccessToken: " + googleCredential.toString());
+
+        return googleCredential.getAccessToken().getTokenValue();
+    }
+
+/*
+Firebase Admin SDK:
+https://console.firebase.google.com/u/0/project/easychat-ce2c5/settings/serviceaccounts/adminsdk
+FileInputStream serviceAccount =
+new FileInputStream("path/to/serviceAccountKey.json");
+
+FirebaseOptions options = new FirebaseOptions.Builder()
+  .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+  .build();
+
+FirebaseApp.initializeApp(options);
+ */
+
 
     void callApi(JSONObject jsonObject) {
         MediaType JSON = MediaType.get("application/json; charset=utf-8");

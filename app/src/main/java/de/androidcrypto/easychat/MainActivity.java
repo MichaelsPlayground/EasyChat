@@ -11,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.Manifest;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.view.MenuItem;
 import android.widget.ImageButton;
 import android.widget.Toast;
@@ -67,6 +68,9 @@ public class MainActivity extends AppCompatActivity {
 
         getFCMToken();
 
+        // getAccessToken will fail without this (FCM Notification
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
     }
 
     private void askNotificationPermission() {
