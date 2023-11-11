@@ -567,6 +567,11 @@ public class StorageFragment extends Fragment {
 
     void uploadFileBtnClick() {
         if (selectedFileUri != null) {
+
+            // todo prevent uploading of some file types, see https://firebase.google.com/support/faq#storage-exe-restrictions
+            String fileExtension = selectedFileUri.getLastPathSegment(); // gives the extension
+            // exe, apk, dll, bat, ipa are not allowed
+
             uploadFile(selectedFileUri);
         }
     }
