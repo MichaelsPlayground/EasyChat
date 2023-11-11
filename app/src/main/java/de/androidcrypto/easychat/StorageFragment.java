@@ -2,6 +2,7 @@ package de.androidcrypto.easychat;
 
 import static android.app.Activity.RESULT_OK;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.DownloadManager;
 import android.content.BroadcastReceiver;
@@ -357,8 +358,8 @@ public class StorageFragment extends Fragment {
             // this lists listing from the root
             StorageReference reference = FirebaseStorage.getInstance().getReference();
             String actualUserId = FirebaseAuth.getInstance().getUid();
-            //FirebaseStorage.getInstance().getReference().child(actualUserId).child("images").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
-            FirebaseStorage.getInstance().getReference().child(actualUserId).child("files").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
+            FirebaseStorage.getInstance().getReference().child(actualUserId).child("images").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
+            //FirebaseStorage.getInstance().getReference().child(actualUserId).child("files").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
                 @Override
                 public void onSuccess(ListResult listResult) {
                     ArrayList<StorageFileModel> arrayList = new ArrayList<>();
@@ -388,14 +389,6 @@ public class StorageFragment extends Fragment {
                         }));
 
                     }
-                    /*
-                    ArrayList<String> arrayList = new ArrayList<>();
-                    for (StorageReference prefix : listResult.getPrefixes()) {
-                        arrayList.add(prefix.getName());
-                        System.out.println("*** added: " + prefix.getName());
-                    }
-
-                     */
 
                     System.out.println("*** arrayList has entries: " + arrayList.size() + " ***");
 
@@ -413,31 +406,9 @@ public class StorageFragment extends Fragment {
                                 public void onSuccess(Uri uri) {
                                     // Got the download URL for 'users/me/profile.png'
                                     System.out.println("*** uri: " + uri + " ***");
-/*
-                                    OkHttpClient client = new OkHttpClient();
 
-                                    Request getRequest = new Request.Builder()
-                                            .url(uri.toString())
-                                            //.url("https://mytodoserver.com/todolist")
-                                            .build();
-
-                                    client.newCall(getRequest).enqueue(new Callback() {
-                                        @Override
-                                        public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                                            e.printStackTrace();
-                                        }
-
-                                        @Override
-                                        public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                                            System.out.println("onResponse");
-                                            System.out.println(response.body().string());
-                                            InputStream is = response.body().byteStream();
-                                        }
-                                    });
-*/
-
-
-
+                                    // set progressIndicator to 0
+                                    progressIndicator.setProgress(0);
                                     DownloadManager.Request request = new DownloadManager.Request(uri);
                                     String title = null;
                                     try {
@@ -456,9 +427,39 @@ public class StorageFragment extends Fragment {
                                     DownloadManager manager = (DownloadManager) getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
                                     //Registering receiver in Download Manager
                                     getActivity().registerReceiver(onCompleted, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
-                                    long reference = manager.enqueue(request);
-                                    System.out.println("reference: " + reference);
+                                    long downloadId = manager.enqueue(request);
+                                    System.out.println("reference: " + downloadId);
                                     Toast.makeText(getActivity(), "Downloading started, please wait...", Toast.LENGTH_SHORT).show();
+
+                                    // progress
+                                    new Thread(new Runnable() {
+                                        @SuppressLint("Range")
+                                        @Override
+                                        public void run() {
+                                            boolean downloading = true;
+                                            while (downloading) {
+                                                DownloadManager.Query q = new DownloadManager.Query();
+                                                q.setFilterById(downloadId);
+                                                Cursor cursor = manager.query(q);
+                                                cursor.moveToFirst();
+                                                @SuppressLint("Range") int bytes_downloaded = cursor.getInt(cursor
+                                                        .getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+                                                int bytes_total = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+                                                if (cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL) {
+                                                    downloading = false;
+                                                }
+                                                final int dl_progress = (int) ((bytes_downloaded * 100L) / bytes_total);
+                                                getActivity().runOnUiThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        progressIndicator.setProgress(dl_progress);
+                                                    }
+                                                });
+                                                //Log.d(Constants.MAIN_VIEW_ACTIVITY, statusMessage(cursor));
+                                                cursor.close();
+                                            }
+                                        }
+                                    }).start();
 
                                 }
                             }).addOnFailureListener(new OnFailureListener() {
