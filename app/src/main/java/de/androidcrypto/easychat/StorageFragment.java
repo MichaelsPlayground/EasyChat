@@ -794,16 +794,26 @@ public class StorageFragment extends Fragment {
         // todo work on this, filename should be given from the real one
 
         try {
-            Okhttp3Progress.main();
+            //Okhttp3Progress.main();
+            String cacheFilename = "mt_cook.jpg";
+            String storageFilename = new File(getContext().getCacheDir(), cacheFilename).getAbsolutePath();
+            System.out.println("*** storageFilename: " + storageFilename);
+            Okhttp3ProgressCallback.main(storageFilename);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-/*
+    }
+
+    private void decryptFileBtnClickCorrect() {
+        // select a file from internal storage and decrypt it to download folder, both by using uris
+
+        // todo work on this, filename should be given from the real one
+
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);*/
-        //intent.setType("*/*");
-                /*
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+
         // Optionally, specify a URI for the file that should appear in the
         // system file picker when it loads.
         //boolean pickerInitialUri = false;
@@ -811,7 +821,6 @@ public class StorageFragment extends Fragment {
         // todo strip the last extension with ".enc off
         intent.putExtra(Intent.EXTRA_TITLE, encryptedFilename);
         fileDecryptSaverActivityResultLauncher.launch(intent);
-        */
     }
 
     ActivityResultLauncher<Intent> fileDecryptSaverActivityResultLauncher = registerForActivityResult(
