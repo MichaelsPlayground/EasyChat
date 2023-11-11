@@ -4,14 +4,14 @@ import static android.app.Activity.RESULT_OK;
 
 import android.app.Activity;
 import android.app.DownloadManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
 import android.provider.DocumentsContract;
 import android.provider.OpenableColumns;
 import android.text.TextUtils;
@@ -21,7 +21,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.URLUtil;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -33,6 +32,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -51,25 +51,17 @@ import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.io.BufferedReader;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.CookieManager;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 import de.androidcrypto.easychat.adapter.ImageAdapter;
@@ -82,11 +74,6 @@ import de.androidcrypto.easychat.model.StorageFileModel;
 import de.androidcrypto.easychat.model.UserModel;
 import de.androidcrypto.easychat.utils.AndroidUtil;
 import de.androidcrypto.easychat.utils.FirebaseUtil;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 public class StorageFragment extends Fragment {
 
@@ -107,6 +94,7 @@ public class StorageFragment extends Fragment {
 
     StorageReference storageReference;
     LinearProgressIndicator progressIndicator;
+
 
     public StorageFragment() {
 
@@ -158,6 +146,15 @@ public class StorageFragment extends Fragment {
         storageRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
         storageReference = FirebaseStorage.getInstance().getReference();
+
+        // default UI settings
+        defaultUiSettings();
+
+
+        ActivityCompat.requestPermissions(getActivity(),
+                new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                1);
+
 
         // see https://github.com/Everyday-Programmer/Firebase-Directory-Listing-Android/tree/main/app/src/main/java/com/example/firebasefileslisting
         storageListDirectories.setOnClickListener((v -> {
@@ -357,10 +354,11 @@ public class StorageFragment extends Fragment {
              */
             //StorageReference reference = FirebaseStorage.getInstance().getReference().child(Objects.requireNonNull(startDirectory));
 
-            // this lis listing from the root
+            // this lists listing from the root
             StorageReference reference = FirebaseStorage.getInstance().getReference();
             String actualUserId = FirebaseAuth.getInstance().getUid();
-            FirebaseStorage.getInstance().getReference().child(actualUserId).child("images").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
+            //FirebaseStorage.getInstance().getReference().child(actualUserId).child("images").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
+            FirebaseStorage.getInstance().getReference().child(actualUserId).child("files").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
                 @Override
                 public void onSuccess(ListResult listResult) {
                     ArrayList<StorageFileModel> arrayList = new ArrayList<>();
@@ -437,17 +435,38 @@ public class StorageFragment extends Fragment {
                                         }
                                     });
 */
+
+
+
                                     DownloadManager.Request request = new DownloadManager.Request(uri);
-                                    String title = URLUtil.guessFileName(uri.toString(), null, null);
+                                    String title = null;
+                                    try {
+                                        title = URLUtil.guessFileName(new URL(uri.toString()).toString(), null, null);
+                                    } catch (MalformedURLException e) {
+                                        //throw new RuntimeException(e);
+                                        System.out.println("malformed url");
+                                    }
+                                    System.out.println("*** title: " + title);
                                     request.setTitle(title);
+
                                     request.setDescription("Downloading file, please wait");
                                     request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
                                     request.setDestinationInExternalFilesDir(getContext(), Environment.DIRECTORY_DOWNLOADS, "");
                                     //request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, title);
+
+                                    //request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, title);
                                     DownloadManager manager = (DownloadManager) getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
+                                    //Registering receiver in Download Manager
+                                    getActivity().registerReceiver(onCompleted, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
                                     long reference = manager.enqueue(request);
                                     System.out.println("reference: " + reference);
                                     Toast.makeText(getActivity(), "Downloading started, please wait...", Toast.LENGTH_LONG).show();
+
+                                    // second try
+
+
+
+
 
 /*
                                     ExecutorService executor = Executors.newSingleThreadScheduledExecutor();
@@ -549,6 +568,21 @@ public class StorageFragment extends Fragment {
         return view;
     }
 
+
+    private void defaultUiSettings() {
+        uploadFile.setEnabled(false);
+        uploadImage.setEnabled(false);
+    }
+
+    // inform the user by Toast that the download is completed
+    BroadcastReceiver onCompleted = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Toast.makeText(context.getApplicationContext(), "Download Finish", Toast.LENGTH_SHORT).show();
+            defaultUiSettings(); // disable upload buttons
+        }
+    };
+
     void selectFileBtnClick() {
         // https://developer.android.com/training/data-storage/shared/documents-files
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
@@ -573,6 +607,7 @@ public class StorageFragment extends Fragment {
                         // the user selected.
                         if (resultData != null) {
                             selectedFileUri = resultData.getData();
+                            uploadFile.setEnabled(true);
                             // Perform operations on the document using its URI.
                             // todo get filename from uri
                             // https://developer.android.com/training/secure-file-sharing/retrieve-info
@@ -685,6 +720,7 @@ public class StorageFragment extends Fragment {
 
     private void uploadFile(Uri uri) {
         System.out.println("*** uploadFileUri: " + uri);
+        progressIndicator.setProgress(0);
         String actualUserId = FirebaseAuth.getInstance().getUid();
         // trying to get the original filename from uri
         FileInformation fileInformation = getFileInformationFromUri(uri);
@@ -694,7 +730,8 @@ public class StorageFragment extends Fragment {
         } else {
             ref = storageReference.child(actualUserId).child("files/" + fileInformation.getFileName());
         }
-
+        // deactivate upload button
+        uploadFile.setEnabled(false);
         ref.putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
@@ -788,6 +825,7 @@ public class StorageFragment extends Fragment {
             updateProfileBtn.setVisibility(View.VISIBLE);
         }
     }
+
 }
 
 

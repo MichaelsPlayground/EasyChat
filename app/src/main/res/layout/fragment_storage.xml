@@ -70,6 +70,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="2dp"
                     android:layout_weight="1"
+                    android:enabled="false"
                     android:background="@drawable/btn_rounded_corner"
                     android:text="upload file" />
 
