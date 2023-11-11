@@ -451,91 +451,14 @@ public class StorageFragment extends Fragment {
 
                                     request.setDescription("Downloading file, please wait");
                                     request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
-                                    request.setDestinationInExternalFilesDir(getContext(), Environment.DIRECTORY_DOWNLOADS, "");
-                                    //request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, title);
-
-                                    //request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, title);
+                                    //request.setDestinationInExternalFilesDir(getContext(), Environment.DIRECTORY_DOWNLOADS, "");
+                                    request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, title);
                                     DownloadManager manager = (DownloadManager) getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
                                     //Registering receiver in Download Manager
                                     getActivity().registerReceiver(onCompleted, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
                                     long reference = manager.enqueue(request);
                                     System.out.println("reference: " + reference);
-                                    Toast.makeText(getActivity(), "Downloading started, please wait...", Toast.LENGTH_LONG).show();
-
-                                    // second try
-
-
-
-
-
-/*
-                                    ExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-                                    Handler handler = new Handler(Looper.getMainLooper());
-
-                                    executor.execute(new Runnable() {
-
-                                        int count;
-
-                                        @Override
-                                        public void run() {
-
-                                            //Background work here
-                                            try {
-
-                                                // put your url.this is sample url.
-                                                URL url = new URL(uri.toString());
-                                                URLConnection conection = url.openConnection();
-                                                conection.connect();
-
-                                                int lengthOfFile = conection.getContentLength();
-                                                System.out.println("*** lengthOfFile: " + lengthOfFile);
-
-                                                // download the file
-
-                                                InputStream input = conection.getInputStream();
-
-                                                //catalogfile is your destenition folder
-                                                OutputStream output = Files.newOutputStream(Paths.get("video.mp4"));
-
-
-                                                byte[] data = new byte[1024];
-
-                                                long total = 0;
-
-                                                while ((count = input.read(data)) != -1) {
-                                                    total += count;
-                                                    // publishing the progress....
-
-
-                                                    //publishProgress(Integer.valueOf("" + (int) ((total * 100) / lenghtOfFile)));
-
-                                                    // writing data to file
-                                                    output.write(data, 0, count);
-                                                }
-
-                                                // flushing output
-                                                output.flush();
-
-                                                // closing streams
-                                                output.close();
-                                                input.close();
-
-
-                                                handler.post(new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        //UI Thread work here
-                                                        progressBar.setVisibility(View.GONE);
-
-                                                    }
-                                                });
-                                            } catch (Exception e) {
-
-                                            }
-                                        }
-                                    });
-
-*/
+                                    Toast.makeText(getActivity(), "Downloading started, please wait...", Toast.LENGTH_SHORT).show();
 
                                 }
                             }).addOnFailureListener(new OnFailureListener() {
