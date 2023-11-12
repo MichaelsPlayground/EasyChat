@@ -49,6 +49,7 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.ListResult;
 import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
@@ -81,14 +82,14 @@ public class StorageFragment extends Fragment {
 
     Button storageListDirectories, selectImage, uploadImage, listImages, listFilesForDownload, selectFile, uploadFile;
     Button encryptFile, decryptFile, downloadFile, downloadDecryptFile;
+    Button deleteFile, deleteImage;
+    TextView storageWarning;
     RecyclerView storageRecyclerView;
 
     //ImageView profilePic;
     //EditText usernameInput;
     //EditText phoneInput;
     Button updateProfileBtn;
-    ProgressBar progressBar;
-    TextView logoutBtn;
 
     UserModel currentUserModel;
     ActivityResultLauncher<Intent> imagePickLauncher;
@@ -143,12 +144,15 @@ public class StorageFragment extends Fragment {
         downloadFile = view.findViewById(R.id.storage_download_file_btn);
         downloadDecryptFile = view.findViewById(R.id.storage_download_decrypt_file_btn);
 
+        deleteFile = view.findViewById(R.id.storage_delete_file_btn);
+        deleteImage= view.findViewById(R.id.storage_delete_image_btn);
+        storageWarning = view.findViewById(R.id.storage_warning);
+
+
         //profilePic = view.findViewById(R.id.profile_image_view);
         //usernameInput = view.findViewById(R.id.profile_username);
         //phoneInput = view.findViewById(R.id.profile_phone);
         updateProfileBtn = view.findViewById(R.id.profle_update_btn);
-        progressBar = view.findViewById(R.id.profile_progress_bar);
-        logoutBtn = view.findViewById(R.id.logout_btn);
 
         storageRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
@@ -188,6 +192,7 @@ public class StorageFragment extends Fragment {
                     while (i.hasNext()) {
                         ref = i.next();
                         System.out.println("onSuccess() File name: " + ref.getName());
+
                         System.out.println("*** ref.downloadUrl: " + ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                             @Override
                             public void onSuccess(Uri uri) {
@@ -332,22 +337,6 @@ public class StorageFragment extends Fragment {
         updateProfileBtn.setOnClickListener((v -> {
 
         }));
-
-        logoutBtn.setOnClickListener((v) -> {
-            FirebaseMessaging.getInstance().deleteToken().addOnCompleteListener(new OnCompleteListener<Void>() {
-                @Override
-                public void onComplete(@NonNull Task<Void> task) {
-                    if (task.isSuccessful()) {
-                        FirebaseUtil.logout();
-                        Intent intent = new Intent(getContext(), SplashActivity.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        startActivity(intent);
-                    }
-                }
-            });
-
-
-        });
 
         listFilesForDownload.setOnClickListener((v -> {
 
@@ -512,6 +501,14 @@ public class StorageFragment extends Fragment {
             downloadDecryptFileBtnClick();
         }));
 
+        deleteFile.setOnClickListener((v -> {
+            deleteFileBtnClick();
+        }));
+
+        deleteImage.setOnClickListener((v -> {
+            deleteImageBtnClick();
+        }));
+
         return view;
     }
 
@@ -519,6 +516,7 @@ public class StorageFragment extends Fragment {
     private void defaultUiSettings() {
         uploadFile.setEnabled(false);
         uploadImage.setEnabled(false);
+        storageWarning.setVisibility(View.GONE);
     }
 
     // inform the user by Toast that the download is completed
@@ -716,7 +714,6 @@ public class StorageFragment extends Fragment {
                 progressIndicator.setProgress(Math.toIntExact(snapshot.getBytesTransferred()));
             }
         });
-
     }
 
     private void addFileInformationToUserCollection(FileInformation fileInformation) {
@@ -930,18 +927,97 @@ public class StorageFragment extends Fragment {
                                 //throw new RuntimeException(e);
                                 Toast.makeText(getActivity(), "Exception on download: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                             }
-
-
-
-
                         }
                     }
                 }
             });
 
 
+    private void deleteFileBtnClick() {
+        // deletes a file in Firebase Cloud Storage in files folder
+        // this is listing the profile_pic directory
 
+        //StorageReference reference = FirebaseStorage.getInstance().getReference().child(Objects.requireNonNull(startDirectory));
 
+        // this lists listing from the root
+        StorageReference reference = FirebaseStorage.getInstance().getReference();
+        String actualUserId = FirebaseAuth.getInstance().getUid();
+        //FirebaseStorage.getInstance().getReference().child(actualUserId).child("images").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
+        FirebaseStorage.getInstance().getReference().child(actualUserId).child("files").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
+            @Override
+            public void onSuccess(ListResult listResult) {
+                storageWarning.setVisibility(View.VISIBLE);
+                ArrayList<StorageFileModel> arrayList = new ArrayList<>();
+                ArrayList<StorageReference> arrayListSR = new ArrayList<>();
+                Iterator<StorageReference> i = listResult.getItems().iterator();
+                StorageReference ref;
+                while (i.hasNext()) {
+                    ref = i.next();
+                    arrayListSR.add(ref);
+                    StorageFileModel sfm = new StorageFileModel();
+                    sfm.setName(ref.getName());
+                    System.out.println("onSuccess() File name: " + ref.getName());
+
+                    arrayList.add(sfm);
+                }
+
+                System.out.println("*** arrayList has entries: " + arrayList.size() + " ***");
+
+                StorageReferenceAdapter adapterSR = new StorageReferenceAdapter(getContext(), arrayListSR);
+                storageRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+                storageRecyclerView.setAdapter(adapterSR);
+                adapterSR.setOnItemClickListener(new StorageReferenceAdapter.OnItemClickListener() {
+                    @Override
+                    public void onClick(StorageReference storageReference) {
+                        System.out.println("*** clicked on name: " + storageReference.getName());
+
+                        // todo use confirmation dialog before deleting
+                        // get metadata
+                        storageReference.getMetadata().addOnSuccessListener(new OnSuccessListener<StorageMetadata>() {
+                            @Override
+                            public void onSuccess(StorageMetadata storageMetadata) {
+                                // Metadata now contains the metadata for 'images/forest.jpg'
+                                String filename = storageMetadata.getName();
+                                long size = storageMetadata.getSizeBytes();
+                                Toast.makeText(getActivity(), "Deleting the file " + filename +
+                                        " size: " + size, Toast.LENGTH_SHORT).show();
+                                storageReference.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+                                        // File deleted successfully
+                                        Toast.makeText(getActivity(), "The file was deleted", Toast.LENGTH_SHORT).show();
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception exception) {
+                                        // Uh-oh, an error occurred!
+                                        Toast.makeText(getActivity(), "Error on file deletion", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception exception) {
+                                // Uh-oh, an error occurred!
+                            }
+                        });
+
+                    }
+                });
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(getActivity(), "There was an error while listing files", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+    }
+
+    private void deleteImageBtnClick() {
+        // deletes an image in Firebase Cloud Storage in images folder
+
+    }
 
     void updateToFirestore() {
         FirebaseUtil.currentUserDetails().set(currentUserModel)
@@ -955,6 +1031,7 @@ public class StorageFragment extends Fragment {
                 });
     }
 
+    // access token: https://firebasestorage.googleapis.com/v0/b/easychat-ce2c5.appspot.com/o/bgC77aBfeYZzX5deM6PqCUe0iMr1%2Ffiles%2FMt_Cook_LC0247.jpg.enc?alt=media&token=a904a1f8-4a4b-4553-a307-1949b987d148
 
     void getUserData() {
         setInProgress(true);
@@ -963,10 +1040,10 @@ public class StorageFragment extends Fragment {
 
     void setInProgress(boolean inProgress) {
         if (inProgress) {
-            progressBar.setVisibility(View.VISIBLE);
+            //progressBar.setVisibility(View.VISIBLE);
             updateProfileBtn.setVisibility(View.GONE);
         } else {
-            progressBar.setVisibility(View.GONE);
+            //progressBar.setVisibility(View.GONE);
             updateProfileBtn.setVisibility(View.VISIBLE);
         }
     }
