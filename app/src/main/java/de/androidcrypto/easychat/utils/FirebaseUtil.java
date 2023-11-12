@@ -16,7 +16,12 @@ public class FirebaseUtil {
     public static String currentUserId(){
         return FirebaseAuth.getInstance().getUid();
     }
-
+    public static final String USERS_FOLDER_NAME = "users";
+    public static final String CHATROOMS_FOLDER_NAME = "chatrooms";
+    public static final String CHATS_FOLDER_NAME = "chats";
+    public static final String FILES_FOLDER_NAME = "files";
+    public static final String IMAGES_FOLDER_NAME = "images";
+    public static final String PROFILE_PIC_FOLDER_NAME = "profile_pic";
     public static boolean isLoggedIn(){
         if(currentUserId() != null){
             return true;
@@ -25,19 +30,19 @@ public class FirebaseUtil {
     }
 
     public static DocumentReference currentUserDetails(){
-        return FirebaseFirestore.getInstance().collection("users").document(currentUserId());
+        return FirebaseFirestore.getInstance().collection(USERS_FOLDER_NAME).document(currentUserId());
     }
 
     public static CollectionReference allUserCollectionReference(){
-        return FirebaseFirestore.getInstance().collection("users");
+        return FirebaseFirestore.getInstance().collection(USERS_FOLDER_NAME);
     }
 
     public static DocumentReference getChatroomReference(String chatroomId){
-        return FirebaseFirestore.getInstance().collection("chatrooms").document(chatroomId);
+        return FirebaseFirestore.getInstance().collection(CHATROOMS_FOLDER_NAME).document(chatroomId);
     }
 
     public static CollectionReference getChatroomMessageReference(String chatroomId){
-        return getChatroomReference(chatroomId).collection("chats");
+        return getChatroomReference(chatroomId).collection(CHATS_FOLDER_NAME);
     }
 
     public static String getChatroomId(String userId1,String userId2){
@@ -49,7 +54,7 @@ public class FirebaseUtil {
     }
 
     public static CollectionReference allChatroomCollectionReference(){
-        return FirebaseFirestore.getInstance().collection("chatrooms");
+        return FirebaseFirestore.getInstance().collection(CHATROOMS_FOLDER_NAME);
     }
 
     public static DocumentReference getOtherUserFromChatroom(List<String> userIds){
@@ -62,7 +67,15 @@ public class FirebaseUtil {
 
     // appended
     public static CollectionReference currentUserFilesCollectionReference(){
-        return FirebaseFirestore.getInstance().collection("users").document(currentUserId()).collection("files");
+        return FirebaseFirestore.getInstance().collection(USERS_FOLDER_NAME).document(currentUserId()).collection(FILES_FOLDER_NAME);
+    }
+
+    public static StorageReference currentUserStorageFilesReference() {
+        return FirebaseStorage.getInstance().getReference().child(currentUserId()).child(FILES_FOLDER_NAME);
+    }
+
+    public static StorageReference currentUserStorageImagesReference() {
+        return FirebaseStorage.getInstance().getReference().child(currentUserId()).child(IMAGES_FOLDER_NAME);
     }
 
     public static String timestampToString(Timestamp timestamp){
@@ -79,12 +92,12 @@ public class FirebaseUtil {
     }
 
     public static StorageReference getCurrentProfilePicStorageRef(){
-        return FirebaseStorage.getInstance().getReference().child("profile_pic")
+        return FirebaseStorage.getInstance().getReference().child(PROFILE_PIC_FOLDER_NAME)
                 .child(FirebaseUtil.currentUserId());
     }
 
     public static StorageReference getOtherProfilePicStorageRef(String otherUserId){
-        return FirebaseStorage.getInstance().getReference().child("profile_pic")
+        return FirebaseStorage.getInstance().getReference().child(PROFILE_PIC_FOLDER_NAME)
                 .child(otherUserId);
     }
 

@@ -935,84 +935,8 @@ public class StorageFragment extends Fragment {
 
     private void deleteFileBtnClick() {
         // deletes a file in Firebase Cloud Storage in files folder
-        // this is listing the profile_pic directory
-
-        //StorageReference reference = FirebaseStorage.getInstance().getReference().child(Objects.requireNonNull(startDirectory));
-
-        // this lists listing from the root
-        StorageReference reference = FirebaseStorage.getInstance().getReference();
         String actualUserId = FirebaseAuth.getInstance().getUid();
-
-        //FirebaseStorage.getInstance().getReference().child(actualUserId).child("images").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
-        FirebaseStorage.getInstance().getReference().child(actualUserId).child("files").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
-            @Override
-            public void onSuccess(ListResult listResult) {
-                storageWarning.setVisibility(View.VISIBLE);
-                ArrayList<StorageFileModel> arrayList = new ArrayList<>();
-                ArrayList<StorageReference> arrayListSR = new ArrayList<>();
-                Iterator<StorageReference> i = listResult.getItems().iterator();
-                StorageReference ref;
-                while (i.hasNext()) {
-                    ref = i.next();
-                    arrayListSR.add(ref);
-                    StorageFileModel sfm = new StorageFileModel();
-                    sfm.setName(ref.getName());
-                    System.out.println("onSuccess() File name: " + ref.getName());
-
-                    arrayList.add(sfm);
-                }
-
-                System.out.println("*** arrayList has entries: " + arrayList.size() + " ***");
-
-                StorageReferenceAdapter adapterSR = new StorageReferenceAdapter(getContext(), arrayListSR);
-                storageRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-                storageRecyclerView.setAdapter(adapterSR);
-                adapterSR.setOnItemClickListener(new StorageReferenceAdapter.OnItemClickListener() {
-                    @Override
-                    public void onClick(StorageReference storageReference) {
-                        System.out.println("*** clicked on name: " + storageReference.getName());
-
-                        // todo use confirmation dialog before deleting
-                        // get metadata
-                        storageReference.getMetadata().addOnSuccessListener(new OnSuccessListener<StorageMetadata>() {
-                            @Override
-                            public void onSuccess(StorageMetadata storageMetadata) {
-                                // Metadata now contains the metadata for 'images/forest.jpg'
-                                String filename = storageMetadata.getName();
-                                long size = storageMetadata.getSizeBytes();
-                                Toast.makeText(getActivity(), "Deleting the file " + filename +
-                                        " size: " + size, Toast.LENGTH_SHORT).show();
-                                storageReference.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
-                                    @Override
-                                    public void onSuccess(Void aVoid) {
-                                        // File deleted successfully
-                                        Toast.makeText(getActivity(), "The file was deleted", Toast.LENGTH_SHORT).show();
-                                    }
-                                }).addOnFailureListener(new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception exception) {
-                                        // Uh-oh, an error occurred!
-                                        Toast.makeText(getActivity(), "Error on file deletion", Toast.LENGTH_SHORT).show();
-                                    }
-                                });
-                            }
-                        }).addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception exception) {
-                                // Uh-oh, an error occurred!
-                            }
-                        });
-
-                    }
-                });
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Toast.makeText(getActivity(), "There was an error while listing files", Toast.LENGTH_SHORT).show();
-            }
-        });
-
+        cloudStorageFileDeletion(FirebaseStorage.getInstance().getReference().child(actualUserId).child("files"));
     }
 
     private void deleteImageBtnClick() {
