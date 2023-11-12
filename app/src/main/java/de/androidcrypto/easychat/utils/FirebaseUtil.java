@@ -1,5 +1,7 @@
 package de.androidcrypto.easychat.utils;
 
+import android.net.Uri;
+
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
@@ -99,6 +101,24 @@ public class FirebaseUtil {
     public static StorageReference getOtherProfilePicStorageRef(String otherUserId){
         return FirebaseStorage.getInstance().getReference().child(PROFILE_PIC_FOLDER_NAME)
                 .child(otherUserId);
+    }
+
+    /**
+     * Firebase Cloud Storage allows to store any files but in the  free 'Spark' plan some file extensions
+     * are not allowed due to security reasons: exe, apk, dll, bat, ipa.
+     * The following method checks for these extensions to avoid errors
+     */
+
+    public static boolean isFileExtensionUriAllowed(Uri uri) {
+        String fileExtension = uri.getLastPathSegment(); // gives the extension
+        if (fileExtension == null) return false;
+        if ((fileExtension.equals(".exe") )|| (fileExtension.equals(".apk")) ||
+                (fileExtension.equals(".dll") )|| (fileExtension.equals(".bat")) ||
+                (fileExtension.equals(".ipa")))  {
+            return false;
+        } else {
+            return true;
+        }
     }
 
 
