@@ -80,7 +80,7 @@ import de.androidcrypto.easychat.utils.FirebaseUtil;
 public class StorageFragment extends Fragment {
 
     Button storageListDirectories, selectImage, uploadImage, listImages, listFilesForDownload, selectFile, uploadFile;
-    Button encryptFile, decryptFile;
+    Button encryptFile, decryptFile, downloadFile, downloadDecryptFile;
     RecyclerView storageRecyclerView;
 
     //ImageView profilePic;
@@ -140,6 +140,8 @@ public class StorageFragment extends Fragment {
 
         encryptFile = view.findViewById(R.id.storage_encrypt_file_btn);
         decryptFile = view.findViewById(R.id.storage_decrypt_file_btn);
+        downloadFile = view.findViewById(R.id.storage_download_file_btn);
+        downloadDecryptFile = view.findViewById(R.id.storage_download_decrypt_file_btn);
 
         //profilePic = view.findViewById(R.id.profile_image_view);
         //usernameInput = view.findViewById(R.id.profile_username);
@@ -502,6 +504,14 @@ public class StorageFragment extends Fragment {
             decryptFileBtnClick();
         }));
 
+        downloadFile.setOnClickListener((v -> {
+            downloadFileBtnClick();
+        }));
+
+        downloadDecryptFile.setOnClickListener((v -> {
+            downloadDecryptFileBtnClick();
+        }));
+
         return view;
     }
 
@@ -793,23 +803,6 @@ public class StorageFragment extends Fragment {
 
         // todo work on this, filename should be given from the real one
 
-        try {
-            //Okhttp3Progress.main();
-            String cacheFilename = "mt_cook.jpg";
-            String storageFilename = new File(getContext().getCacheDir(), cacheFilename).getAbsolutePath();
-            System.out.println("*** storageFilename: " + storageFilename);
-            Okhttp3ProgressCallback.main(storageFilename);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    private void decryptFileBtnClickCorrect() {
-        // select a file from internal storage and decrypt it to download folder, both by using uris
-
-        // todo work on this, filename should be given from the real one
-
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
@@ -852,6 +845,99 @@ public class StorageFragment extends Fragment {
                     }
                 }
             });
+
+    private void downloadFileBtnClick() {
+        // select a file from internal storage and decrypt it to download folder, both by using uris
+
+        // todo work on this, filename should be given from the real one
+
+        try {
+            //Okhttp3Progress.main();
+            String cacheFilename = "mt_cook.jpg";
+            String storageFilename = new File(getContext().getCacheDir(), cacheFilename).getAbsolutePath();
+            System.out.println("*** storageFilename: " + storageFilename);
+            progressIndicator.setMax(Math.toIntExact(100));
+            String downloadUrl = "https://firebasestorage.googleapis.com/v0/b/easychat-ce2c5.appspot.com/o/bgC77aBfeYZzX5deM6PqCUe0iMr1%2Ffiles%2FMt_Cook_LC0247.jpg?alt=media&token=4db57606-0285-4ea6-b957-aaaf9e120d27";
+            Okhttp3ProgressDownloader downloader = new Okhttp3ProgressDownloader(downloadUrl, storageFilename, progressIndicator);
+            downloader.run();
+            //Okhttp3ProgressCallback.main(storageFilename);
+        } catch (Exception e) {
+            //throw new RuntimeException(e);
+            Toast.makeText(getActivity(), "Exception on download: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void downloadDecryptFileBtnClick() {
+        // this will download a file, decrypt it on loading and save it in the download folder
+        // todo work on this, filename should be given from the real one
+
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        //intent.setType("*/*");
+        intent.setType("image/*/*"); // for image
+
+        // Optionally, specify a URI for the file that should appear in the
+        // system file picker when it loads.
+        //boolean pickerInitialUri = false;
+        //intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
+        // todo strip the last extension with ".enc off
+        String storeFilename = "mtc2.jpg";
+        //String storeFilename = "file3a.txt";
+        intent.putExtra(Intent.EXTRA_TITLE, storeFilename);
+        fileDownloadDecryptSaverActivityResultLauncher.launch(intent);
+    }
+
+    ActivityResultLauncher<Intent> fileDownloadDecryptSaverActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        System.out.println("fileDownloadDecryptSaverActivityResultLauncher");
+                        // There are no request codes
+                        Intent resultData = result.getData();
+                        // The result data contains a URI for the document or directory that
+                        // the user selected.
+                        Uri selectedUri = null;
+                        if (resultData != null) {
+                            selectedUri = resultData.getData();
+                            // Perform operations on the document using its URI.
+                            Toast.makeText(getContext(), "You selected this file for download and decryption: " + selectedUri.toString(), Toast.LENGTH_SHORT).show();
+
+                            char[] passphrase = "123456".toCharArray();
+                            int iterations = 1000;
+                            //String cacheFilename = fileInformation.getFileName() + ".enc";
+                            //String encryptedFilename = new File(getContext().getCacheDir(), encryptedFilename;
+                            try {
+                                //Okhttp3Progress.main();
+                                //String cacheFilename = "mt_cook.jpg";
+                                //String storageFilename = new File(getContext().getCacheDir(), cacheFilename).getAbsolutePath();
+                                //System.out.println("*** storageFilename: " + storageFilename);
+                                progressIndicator.setMax(Math.toIntExact(100));
+
+                                //String downloadUrl = "https://firebasestorage.googleapis.com/v0/b/easychat-ce2c5.appspot.com/o/bgC77aBfeYZzX5deM6PqCUe0iMr1%2Ffiles%2Fmtc.bin.enc?alt=media&token=a10a55af-109d-4fa5-a5fe-ceab69004436";
+                                //String downloadUrl = "https://firebasestorage.googleapis.com/v0/b/easychat-ce2c5.appspot.com/o/bgC77aBfeYZzX5deM6PqCUe0iMr1%2Ffiles%2Ffile03.txt.enc?alt=media&token=a0ff7051-0f76-4aba-ad51-f1b321a01b30";
+                                String downloadUrl = "https://firebasestorage.googleapis.com/v0/b/easychat-ce2c5.appspot.com/o/bgC77aBfeYZzX5deM6PqCUe0iMr1%2Ffiles%2FMt_Cook_LC0247.jpg.enc?alt=media&token=a904a1f8-4a4b-4553-a307-1949b987d148";
+                                Okhttp3ProgressDownloaderDecrypt downloader = new Okhttp3ProgressDownloaderDecrypt(downloadUrl, progressIndicator, getContext(), selectedUri, passphrase, iterations);
+                                downloader.run();
+                                Toast.makeText(getActivity(), "fileDownloadDecryptSaverActivityResultLauncher success", Toast.LENGTH_SHORT).show();
+                                //Okhttp3ProgressCallback.main(storageFilename);
+                            } catch (Exception e) {
+                                //throw new RuntimeException(e);
+                                Toast.makeText(getActivity(), "Exception on download: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+
+
+
+
+                        }
+                    }
+                }
+            });
+
+
+
+
 
     void updateToFirestore() {
         FirebaseUtil.currentUserDetails().set(currentUserModel)

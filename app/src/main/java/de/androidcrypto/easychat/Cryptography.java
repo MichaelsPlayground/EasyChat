@@ -8,6 +8,7 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -155,6 +156,39 @@ public class Cryptography {
         }
 
         try (FileInputStream in = new FileInputStream(inputFilename); // i don't care about the path as all is local
+             CipherInputStream cipherInputStream = new CipherInputStream(in, cipher);
+             OutputStream out = context.getContentResolver().openOutputStream(outputUri)) {
+            byte[] buffer = new byte[8192];
+            in.read(nonce);
+            in.read(salt);
+            SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+            KeySpec keySpec = new PBEKeySpec(password, salt, iterations, 32 * 8); // 128 - 192 - 256
+            byte[] key = secretKeyFactory.generateSecret(keySpec).getEncoded();
+            SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
+            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(16 * 8, nonce);
+            cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, gcmParameterSpec);
+            int nread;
+            while ((nread = cipherInputStream.read(buffer)) > 0) {
+                out.write(buffer, 0, nread);
+            }
+            out.flush();
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
+
+    public static boolean decryptGcmFileBufferedCipherInputStreamFromInputStream(Context context, InputStream inputStream, Uri outputUri, char[] password, int iterations) {
+        byte[] salt = new byte[32];
+        byte[] nonce = new byte[12];
+        Cipher cipher = null;
+        try {
+            cipher = Cipher.getInstance("AES/GCM/NOPadding");
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
+            return false;
+        }
+
+        try (BufferedInputStream in = new BufferedInputStream(inputStream);
              CipherInputStream cipherInputStream = new CipherInputStream(in, cipher);
              OutputStream out = context.getContentResolver().openOutputStream(outputUri)) {
             byte[] buffer = new byte[8192];

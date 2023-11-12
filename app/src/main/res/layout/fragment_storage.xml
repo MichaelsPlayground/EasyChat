@@ -112,6 +112,36 @@
 
             </LinearLayout>
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="8dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/storage_download_file_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="2dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_rounded_corner"
+                    android:text="download file" />
+
+                <Button
+                    android:id="@+id/storage_download_decrypt_file_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="2dp"
+                    android:layout_weight="1"
+                    android:enabled="true"
+                    android:background="@drawable/btn_rounded_corner"
+                    android:text="dl &amp; decrypt file" />
+
+            </LinearLayout>
+
             <Button
                 android:id="@+id/storage_list_files_for_download_btn"
                 android:layout_width="match_parent"
