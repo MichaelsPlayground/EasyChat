@@ -684,6 +684,10 @@ public class StorageFragment extends Fragment {
         }
         // deactivate upload button
         uploadFile.setEnabled(false);
+
+        // todo upload files directly encrypting using inputstream and outputstream
+        //ref.putStream(inputStream, storageMetadata)
+
         ref.putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
