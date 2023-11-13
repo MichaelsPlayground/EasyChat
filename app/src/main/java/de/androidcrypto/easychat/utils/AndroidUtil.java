@@ -1,13 +1,22 @@
 package de.androidcrypto.easychat.utils;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
+
+import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
+
 import de.androidcrypto.easychat.model.UserModel;
 
 public class AndroidUtil {
@@ -37,5 +46,17 @@ public class AndroidUtil {
 
     public static void setProfilePic(Context context, Uri imageUri, ImageView imageView){
         Glide.with(context).load(imageUri).apply(RequestOptions.circleCropTransform()).into(imageView);
+    }
+
+    // gives an 19 byte long timestamp yyyy.MM.dd HH:mm:ss
+    public static String getTimestamp() {
+        // gives a 19 character long string
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return ZonedDateTime
+                    .now(ZoneId.systemDefault())
+                    .format(DateTimeFormatter.ofPattern("uuuu.MM.dd HH:mm:ss"));
+        } else {
+            return new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
+        }
     }
 }

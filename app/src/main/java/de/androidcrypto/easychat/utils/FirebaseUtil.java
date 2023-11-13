@@ -22,7 +22,9 @@ public class FirebaseUtil {
     public static final String CHATROOMS_FOLDER_NAME = "chatrooms";
     public static final String CHATS_FOLDER_NAME = "chats";
     public static final String FILES_FOLDER_NAME = "files";
+    public static final String ENCRYPTED_FILES_FOLDER_NAME = "files_enc";
     public static final String IMAGES_FOLDER_NAME = "images";
+    public static final String ENCRYPTED_IMAGES_FOLDER_NAME = "images_enc";
     public static final String PROFILE_PIC_FOLDER_NAME = "profile_pic";
     public static boolean isLoggedIn(){
         if(currentUserId() != null){
@@ -76,8 +78,23 @@ public class FirebaseUtil {
         return FirebaseStorage.getInstance().getReference().child(currentUserId()).child(FILES_FOLDER_NAME);
     }
 
+    public static StorageReference currentUserStorageEncryptedFilesReference() {
+        return FirebaseStorage.getInstance().getReference().child(currentUserId()).child(ENCRYPTED_FILES_FOLDER_NAME);
+    }
+    public static StorageReference currentUserStorageEncryptedFilesReference(String filename) {
+        return FirebaseStorage.getInstance().getReference().child(currentUserId()).child(ENCRYPTED_FILES_FOLDER_NAME + "/" + filename);
+    }
+
     public static StorageReference currentUserStorageImagesReference() {
         return FirebaseStorage.getInstance().getReference().child(currentUserId()).child(IMAGES_FOLDER_NAME);
+    }
+
+    public static StorageReference currentUserStorageEncryptedImagesReference() {
+        return FirebaseStorage.getInstance().getReference().child(currentUserId()).child(ENCRYPTED_IMAGES_FOLDER_NAME);
+    }
+
+    public static StorageReference currentUserStorageEncryptedImagesReference(String filename) {
+        return FirebaseStorage.getInstance().getReference().child(currentUserId()).child(ENCRYPTED_IMAGES_FOLDER_NAME + "/" + filename);
     }
 
     public static String timestampToString(Timestamp timestamp){

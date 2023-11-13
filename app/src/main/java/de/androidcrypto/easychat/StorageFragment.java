@@ -55,9 +55,11 @@ import com.google.firebase.storage.UploadTask;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -661,6 +663,7 @@ public class StorageFragment extends Fragment {
         String actualUserId = FirebaseAuth.getInstance().getUid();
         // trying to get the original filename from uri
         FileInformation fileInformation = getFileInformationFromUri(uri);
+        fileInformation.setFileStorage(FirebaseUtil.IMAGES_FOLDER_NAME);
         StorageReference ref;
         if ( TextUtils.isEmpty(fileInformation.getFileName())) {
             ref = storageReference.child(actualUserId).child("images/" + UUID.randomUUID().toString() + ".jpg");
@@ -694,6 +697,7 @@ public class StorageFragment extends Fragment {
         String actualUserId = FirebaseAuth.getInstance().getUid();
         // trying to get the original filename from uri
         FileInformation fileInformation = getFileInformationFromUri(uri);
+        fileInformation.setFileStorage(FirebaseUtil.FILES_FOLDER_NAME);
         StorageReference ref;
         if ( TextUtils.isEmpty(fileInformation.getFileName())) {
             ref = storageReference.child(actualUserId).child("files/" + UUID.randomUUID().toString() + ".abc");
@@ -717,6 +721,7 @@ public class StorageFragment extends Fragment {
                     @Override
                     public void onSuccess(Uri uri) {
                         fileInformation.setDownloadUrl(uri);
+                        fileInformation.setTimestamp(AndroidUtil.getTimestamp());
                         addFileInformationToUserCollection(fileInformation);
                     }
                 });
@@ -870,23 +875,7 @@ public class StorageFragment extends Fragment {
     private void uploadEncryptFileBtnClick() {
 
         // just a pre check
-        int passphraseLength = 0;
-        if (TextUtils.isEmpty(passphrase.getText().toString())) {
-            passphraseLayout.setError("please enter a passphrase, minimum is 3 characters");
-            return;
-        } else {
-            passphraseLayout.setError("");
-        }
-        if (passphrase.length() < 3) {
-            passphraseLayout.setError("please enter a passphrase, minimum is 3 characters");
-            return;
-        } else {
-            passphraseLayout.setError("");
-        }
-        passphraseLength = passphrase.length();
-        // get the passphrase as char[]
-        char[] passphraseChars = new char[passphraseLength];
-        passphrase.getText().getChars(0, passphraseLength, passphraseChars, 0);
+        if (!passphrasePreCheck()) return;
 
         // select a file in download folder, encrypt it and upload it to firebase cloud storage
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
@@ -896,6 +885,7 @@ public class StorageFragment extends Fragment {
         // system file picker when it loads.
         boolean pickerInitialUri = false;
         intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
+        intent.putExtra("filetype", "files");
         fileUploadEncryptChooserActivityResultLauncher.launch(intent);
     }
 
@@ -911,49 +901,84 @@ public class StorageFragment extends Fragment {
                         // the user selected.
                         if (resultData != null) {
                             selectedFileUri = resultData.getData();
-                            FileInformation fileInformation = getFileInformationFromUri(selectedFileUri);
+                            String fileType = result.getData().getBundleExtra("filetype").toString();
 
-                            int passphraseLength = 0;
-                            if (TextUtils.isEmpty(passphrase.getText().toString())) {
-                                passphraseLayout.setError("please enter a passphrase, minimum is 3 characters");
-                                return;
-                            } else {
-                                passphraseLayout.setError("");
-                            }
-                            if (passphrase.length() < 3) {
-                                passphraseLayout.setError("please enter a passphrase, minimum is 3 characters");
-                                return;
-                            } else {
-                                passphraseLayout.setError("");
-                            }
-                            passphraseLength = passphrase.length();
+                            //String fileType = result.getData().getStringExtra("filetype");
+                            System.out.println("fileType from intent: " + fileType);
+                            FileInformation fileInformation = getFileInformationFromUri(selectedFileUri);
+                            fileInformation.setFileStorage(FirebaseUtil.ENCRYPTED_FILES_FOLDER_NAME);
+                            System.out.println("fileInformation:\n" +
+                                    "fileName: " + fileInformation.getFileName() + "\n" +
+                                    "fileSize: " + fileInformation.getFileSize() + "\n" +
+                                    "fileStorage: " + fileInformation.getFileStorage()
+                                    );
+
+                            if (!passphrasePreCheck()) return;
+                            int passphraseLength = passphrase.length();
                             // get the passphrase as char[]
                             char[] passphraseChars = new char[passphraseLength];
                             passphrase.getText().getChars(0, passphraseLength, passphraseChars, 0);
 
-
-                            Toast.makeText(getContext(), "You selected this file: " + fileInformation.getFileName()
-                                    + " with size: " + fileInformation.getFileSize(), Toast.LENGTH_SHORT).show();
-                            //char[] passphrase = "123456".toCharArray();
-                            ///xxx
-                            //int iterations = 1000;
+                            // now encrypt the file to internal cache
                             String cacheFilename = fileInformation.getFileName() + ".enc";
-                            encryptedFilename = new File(getContext().getCacheDir(), cacheFilename).getAbsolutePath();
-//xx
-                            boolean success = Cryptography.encryptGcmFileBufferedCipherOutputStreamToCacheFile(getContext(), selectedFileUri, encryptedFilename, passphraseChars, NUMBER_OF_PBKDF2_ITERATIONS);
+                            File encryptedFile = new File(getContext().getCacheDir(), cacheFilename);
+                            encryptedFilename = encryptedFile.getAbsolutePath();
+                            //boolean success = Cryptography.encryptGcmFileBufferedCipherOutputStreamToCacheFile(getContext(), selectedFileUri, encryptedFilename, passphraseChars, NUMBER_OF_PBKDF2_ITERATIONS);
+                            boolean success = Cryptography.encryptGcmFileBufferedCipherOutputStreamToCacheFile(getContext(), selectedFileUri, encryptedFilename, passphraseChars, 1000);
                             Toast.makeText(getActivity(), "encryptGcmFileBufferedCipherOutputStreamToCacheFile: " + success, Toast.LENGTH_SHORT).show();
 
-                            //uploadFile.setEnabled(true);
-                            // Perform operations on the document using its URI.
-                            // todo get filename from uri
-                            // https://developer.android.com/training/secure-file-sharing/retrieve-info
+                            // now upload the encrypted file
+                            StorageReference ref = FirebaseUtil.currentUserStorageEncryptedFilesReference(cacheFilename);
+                            if (success) {
+                                Uri file = Uri.fromFile(encryptedFile);
+                                StorageMetadata storageMetadata = new StorageMetadata.Builder()
+                                        .setContentType(getContext().getContentResolver().getType(file))
+                                        .build();
+                                ref.putFile(file, storageMetadata).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                    @Override
+                                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                        System.out.println("*** upload onSuccess");
+                                        Toast.makeText(getContext(), "File Uploaded!!", Toast.LENGTH_LONG).show();
+                                        ref.getDownloadUrl();
+                                        // get download url
+                                        ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                            @Override
+                                            public void onSuccess(Uri uri) {
+                                                fileInformation.setDownloadUrl(uri);
+                                                fileInformation.setTimestamp(AndroidUtil.getTimestamp());
+                                                addFileInformationToUserCollection(fileInformation);
+                                                // delete file in cache folder
+                                                boolean success = deleteCacheFile(encryptedFile);
+                                                Toast.makeText(getContext(), "delete file in cache folder success: " + success, Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        System.out.println("*** upload onFailure");
+                                        Toast.makeText(getContext(), "Failed!" + e.getMessage(), Toast.LENGTH_LONG).show();
+                                    }
+                                }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                                    @Override
+                                    public void onProgress(@NonNull UploadTask.TaskSnapshot snapshot) {
+                                        progressIndicator.setMax(Math.toIntExact(snapshot.getTotalByteCount()));
+                                        progressIndicator.setProgress(Math.toIntExact(snapshot.getBytesTransferred()));
+                                    }
+                                });
+                            }
 
                         }
                     }
                 }
             });
 
-    private void uploadFileXxx(Uri uri) {
+    private boolean deleteCacheFile(File file) {
+        if (file == null) return true; // if there is not file it returns true
+        if (!file.exists()) return true;
+        return file.delete();
+    }
+    private void uploadFileXxx(Uri uri, char[] passphrase, int iterations) {
         System.out.println("*** uploadFileUri: " + uri);
         progressIndicator.setProgress(0);
         String actualUserId = FirebaseAuth.getInstance().getUid();
@@ -969,8 +994,48 @@ public class StorageFragment extends Fragment {
         uploadFile.setEnabled(false);
 
         // todo upload files directly encrypting using inputstream and outputstream
-        //ref.putStream(inputStream, storageMetadata)
+        InputStream inputStream = null;
+        //boolean result = Cryptography.encryptGcmFileBufferedCipherOutputStreamToStream(getContext(), uri, inputStream, passphrase, iterations);
 
+        // https://stackoverflow.com/a/39741139/8166854
+        StorageMetadata storageMetadata = new StorageMetadata.Builder()
+                .setContentType(getContext().getContentResolver().getType(uri))
+                .build();
+        /*
+        StorageMetadata storageMetadata = new StorageMetadata.Builder()
+                .setContentType(contentResolver.getType(imageUri))
+                .build();
+*/
+
+        ref.putStream(inputStream, storageMetadata).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                System.out.println("*** upload onSuccess");
+                Toast.makeText(getContext(), "File Uploaded!!", Toast.LENGTH_LONG).show();
+                ref.getDownloadUrl();
+                // get download url
+                ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    @Override
+                    public void onSuccess(Uri uri) {
+                        fileInformation.setDownloadUrl(uri);
+                        addFileInformationToUserCollection(fileInformation);
+                    }
+                });
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                System.out.println("*** upload onFailure");
+                Toast.makeText(getContext(), "Failed!" + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onProgress(@NonNull UploadTask.TaskSnapshot snapshot) {
+                progressIndicator.setMax(Math.toIntExact(snapshot.getTotalByteCount()));
+                progressIndicator.setProgress(Math.toIntExact(snapshot.getBytesTransferred()));
+            }
+        });
+/*
         ref.putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
@@ -999,6 +1064,24 @@ public class StorageFragment extends Fragment {
                 progressIndicator.setProgress(Math.toIntExact(snapshot.getBytesTransferred()));
             }
         });
+
+ */
+    }
+
+    private boolean passphrasePreCheck() {
+        if (TextUtils.isEmpty(passphrase.getText().toString())) {
+            passphraseLayout.setError("please enter a passphrase, minimum is 3 characters");
+            return false;
+        } else {
+            passphraseLayout.setError("");
+        }
+        if (passphrase.length() < 3) {
+            passphraseLayout.setError("please enter a passphrase, minimum is 3 characters");
+            return false;
+        } else {
+            passphraseLayout.setError("");
+            return true;
+        }
     }
 
     private void uploadEncrypt(Uri sourceUri) {
