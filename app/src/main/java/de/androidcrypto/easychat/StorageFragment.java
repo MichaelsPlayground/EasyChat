@@ -7,6 +7,7 @@ import android.app.Activity;
 import android.app.DownloadManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
@@ -22,6 +23,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.URLUtil;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -33,6 +36,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -864,6 +868,9 @@ public class StorageFragment extends Fragment {
 
     private void uploadEncryptFileBtnClick() {
 
+        askPassphrase();
+
+
         // just a pre check
         if (!passphrasePreCheck()) return;
 
@@ -1008,6 +1015,29 @@ public class StorageFragment extends Fragment {
             passphraseLayout.setError("");
             return true;
         }
+    }
+
+    private void askPassphrase() {
+        final EditText taskEditText = new EditText(getActivity());
+        FrameLayout layout = new FrameLayout(getContext());
+        layout.setPaddingRelative(45,15,45,0);
+        layout.addView(taskEditText);
+        AlertDialog dialog = new AlertDialog.Builder(getContext())
+                .setTitle("Enter your passphrase")
+                .setMessage("Enter a passphrase (minimum 6 characters):")
+                //.setView(taskEditText)
+                .setView(layout)
+                .setPositiveButton("yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String task = taskEditText.getText().toString();
+                        Toast.makeText(getContext(), "Passphrase: " + task, Toast.LENGTH_SHORT).show();
+                        // do whatever you want to do
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .create();
+        dialog.show();
     }
 
     private void downloadFileBtnClick() {
