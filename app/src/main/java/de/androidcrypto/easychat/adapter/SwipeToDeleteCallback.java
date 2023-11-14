@@ -19,6 +19,8 @@ import de.androidcrypto.easychat.R;
 
 abstract public class SwipeToDeleteCallback extends ItemTouchHelper.Callback {
 
+    // see: https://www.digitalocean.com/community/tutorials/android-recyclerview-swipe-to-delete-undo
+    // https://github.com/WebJournal/journaldev/tree/master/Android/AndroidRecyclerViewSwipeToDelete
     Context mContext;
     private Paint mClearPaint;
     private ColorDrawable mBackground;

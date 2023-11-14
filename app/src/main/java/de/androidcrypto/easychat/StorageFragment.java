@@ -541,6 +541,8 @@ public class StorageFragment extends Fragment {
                     storageRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
                     storageRecyclerView.setAdapter(adapterSR);
 
+                    // this is using class SwipeToDeleteCallback
+                    // see: https://www.digitalocean.com/community/tutorials/android-recyclerview-swipe-to-delete-undo
                     SwipeToDeleteCallback swipeToDeleteCallback = new SwipeToDeleteCallback(getContext()) {
                         @Override
                         public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int i) {
