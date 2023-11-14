@@ -11,13 +11,13 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.OpenableColumns;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,7 +26,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,6 +38,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -48,8 +48,8 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.ListResult;
 import com.google.firebase.storage.OnProgressListener;
@@ -59,16 +59,14 @@ import com.google.firebase.storage.UploadTask;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -77,6 +75,8 @@ import de.androidcrypto.easychat.adapter.ImageAdapter;
 import de.androidcrypto.easychat.adapter.StorageDirectoriesAdapter;
 import de.androidcrypto.easychat.adapter.StorageFileAdapter;
 import de.androidcrypto.easychat.adapter.StorageReferenceAdapter;
+import de.androidcrypto.easychat.adapter.SwipeController;
+import de.androidcrypto.easychat.adapter.SwipeToDeleteCallback;
 import de.androidcrypto.easychat.model.FileInformation;
 import de.androidcrypto.easychat.model.ImageModel;
 import de.androidcrypto.easychat.model.StorageFileModel;
@@ -88,6 +88,7 @@ public class StorageFragment extends Fragment {
 
     private Button storageListDirectories, selectImage, uploadImage, listImages, listFilesForDownload, selectFile, uploadFile;
 
+    private Button listFilesForDownload2;
     private com.google.android.material.textfield.TextInputLayout passphraseLayout;
     private com.google.android.material.textfield.TextInputEditText passphrase;
     private Button uploadEncryptFile, uploadEncryptImage;
@@ -112,7 +113,7 @@ public class StorageFragment extends Fragment {
     private String encryptedFilename = "";
     private static final int NUMBER_OF_PBKDF2_ITERATIONS = 10000;
     private String fileStorageReference; // it filled when sending the Intent(Intent.ACTION_OPEN_DOCUMENT), data from FirebaseUtil e.g. ENCRYPTED_FILES_FOLDER_NAME
-
+    private SwipeController swipeController = null;
     public StorageFragment() {
 
     }
@@ -146,6 +147,7 @@ public class StorageFragment extends Fragment {
         uploadImage = view.findViewById(R.id.storage_upload_image_btn);
         listImages = view.findViewById(R.id.storage_list_images_btn);
         listFilesForDownload = view.findViewById(R.id.storage_list_files_for_download_btn);
+        listFilesForDownload2 = view.findViewById(R.id.storage_list_files_for_download_2_btn);
         selectedImageView = view.findViewById(R.id.storage_image_view);
         progressIndicator = view.findViewById(R.id.storage_progress);
 
@@ -385,11 +387,11 @@ public class StorageFragment extends Fragment {
                         arrayListSR.add(ref);
                         StorageFileModel sfm = new StorageFileModel();
                         sfm.setName(ref.getName());
+
                         System.out.println("onSuccess() File name: " + ref.getName());
                         System.out.println("*** ref.downloadUrl: " + ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                             @Override
                             public void onSuccess(Uri uri) {
-                                // Got the download URL for 'users/me/profile.png'
                                 System.out.println("*** uri: " + uri + " ***");
                                 sfm.setUri(uri);
                                 arrayList.add(sfm);
@@ -476,6 +478,200 @@ public class StorageFragment extends Fragment {
                                         }
                                     }).start();
 
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception exception) {
+                                    // Handle any errors
+                                    System.out.println("### Error: " + exception.getMessage() + " ###");
+                                }
+                            });
+                        }
+                    });
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Toast.makeText(getActivity(), "There was an error while listing files", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }));
+
+        listFilesForDownload2.setOnClickListener((v -> {
+
+            // this lists listing from the root
+            //StorageReference reference = FirebaseStorage.getInstance().getReference();
+            String actualUserId = FirebaseAuth.getInstance().getUid();
+            //FirebaseStorage.getInstance().getReference().child(actualUserId).child("images").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
+            FirebaseStorage.getInstance().getReference().child(actualUserId).child("files").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
+                @Override
+                public void onSuccess(ListResult listResult) {
+                    ArrayList<StorageFileModel> arrayList = new ArrayList<>();
+                    ArrayList<StorageReference> arrayListSR = new ArrayList<>();
+                    Iterator<StorageReference> i = listResult.getItems().iterator();
+                    StorageReference ref;
+                    while (i.hasNext()) {
+                        ref = i.next();
+                        arrayListSR.add(ref);
+                        StorageFileModel sfm = new StorageFileModel();
+                        sfm.setName(ref.getName());
+
+                        System.out.println("onSuccess() File name: " + ref.getName());
+                        System.out.println("*** ref.downloadUrl: " + ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                System.out.println("*** uri: " + uri + " ***");
+                                sfm.setUri(uri);
+                                arrayList.add(sfm);
+                                System.out.println("arrayList added");
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception exception) {
+                                // Handle any errors
+                                System.out.println("### Error: " + exception.getMessage() + " ###");
+                            }
+                        }));
+
+                    }
+
+                    System.out.println("*** arrayList has entries: " + arrayList.size() + " ***");
+
+                    StorageReferenceAdapter adapterSR = new StorageReferenceAdapter(getContext(), arrayListSR);
+                    storageRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+                    storageRecyclerView.setAdapter(adapterSR);
+
+                    SwipeToDeleteCallback swipeToDeleteCallback = new SwipeToDeleteCallback(getContext()) {
+                        @Override
+                        public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int i) {
+
+
+                            //final int position = viewHolder.getAdapterPosition(); // getAdapterPosition is deprecated
+                            final int position = viewHolder.getBindingAdapterPosition();
+                            final StorageReference item = adapterSR.getArrayList().get(position);
+                            //final String item = mAdapter.getData().get(position);
+
+                            adapterSR.removeItem(position);
+                            // todo remove from Storage and Firestore
+
+
+                            System.out.println("actual contents of the arraylist");
+                        }
+                    };
+
+                    ItemTouchHelper itemTouchhelper = new ItemTouchHelper(swipeToDeleteCallback);
+                    itemTouchhelper.attachToRecyclerView(storageRecyclerView);
+
+                    /*
+                    RecyclerSwipeHelper mRecyclerSwipeHelper = new RecyclerSwipeHelper(ContextCompat.getColor(getContext(), R.color.swipe_right_color),
+                            ContextCompat.getColor(getContext(), R.color.swipe_left_color),
+                            R.drawable.outline_edit_24, R.drawable.outline_delete_forever_24, getContext()) {
+                        @Override
+                        public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+
+                            //calling the notifyItemChanged() method is absolutely essential to redraw the RecyclerView item and remove the icons we had drawn.
+                            adapterSR.notifyItemChanged(viewHolder.getBindingAdapterPosition());
+
+                            if (direction == ItemTouchHelper.LEFT) {
+                                //handle left swipe
+                                Toast.makeText(getActivity(), "swiped left", Toast.LENGTH_SHORT).show();
+                            } else {
+                                //handle right swipe
+                                Toast.makeText(getActivity(), "swiped right", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    };
+                    ItemTouchHelper mItemTouchHelper = new ItemTouchHelper(mRecyclerSwipeHelper);
+                    mItemTouchHelper.attachToRecyclerView(storageRecyclerView);
+*/
+
+/*
+                    swipeController = new SwipeController(new SwipeControllerActions() {
+                        @Override
+                        public void onRightClicked(int position) {
+                            //adapterSR.players.remove(position);
+                            adapterSR.notifyItemRemoved(position);
+                            adapterSR.notifyItemRangeChanged(position, adapterSR.getItemCount());
+                        }
+                    });
+
+                    ItemTouchHelper itemTouchhelper = new ItemTouchHelper(swipeController);
+                    itemTouchhelper.attachToRecyclerView(storageRecyclerView);
+
+                    storageRecyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
+                        @Override
+                        public void onDraw(Canvas c, RecyclerView parent, RecyclerView.State state) {
+                            swipeController.onDraw(c);
+                        }
+                    });
+*/
+
+                    adapterSR.setOnItemClickListener(new StorageReferenceAdapter.OnItemClickListener() {
+                        @Override
+                        public void onClick(StorageReference storageReference) {
+                            System.out.println("*** clicked on name: " + storageReference.getName());
+
+                            // get the download url from task
+                            storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                @Override
+                                public void onSuccess(Uri uri) {
+                                    // Got the download URL for 'users/me/profile.png'
+                                    System.out.println("*** uri: " + uri + " ***");
+
+                                    // set progressIndicator to 0
+                                    progressIndicator.setProgress(0);
+                                    DownloadManager.Request request = new DownloadManager.Request(uri);
+                                    String title = null;
+                                    try {
+                                        title = URLUtil.guessFileName(new URL(uri.toString()).toString(), null, null);
+                                    } catch (MalformedURLException e) {
+                                        //throw new RuntimeException(e);
+                                        System.out.println("malformed url");
+                                    }
+                                    System.out.println("*** title: " + title);
+                                    request.setTitle(title);
+
+                                    request.setDescription("Downloading file, please wait");
+                                    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
+                                    //request.setDestinationInExternalFilesDir(getContext(), Environment.DIRECTORY_DOWNLOADS, "");
+                                    request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, title);
+
+                                    DownloadManager manager = (DownloadManager) getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
+                                    //Registering receiver in Download Manager
+                                    getActivity().registerReceiver(onCompleted, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+                                    long downloadId = manager.enqueue(request);
+                                    System.out.println("reference: " + downloadId);
+                                    Toast.makeText(getActivity(), "Downloading started, please wait...", Toast.LENGTH_SHORT).show();
+
+                                    // progress
+                                    new Thread(new Runnable() {
+                                        @SuppressLint("Range")
+                                        @Override
+                                        public void run() {
+                                            boolean downloading = true;
+                                            while (downloading) {
+                                                DownloadManager.Query q = new DownloadManager.Query();
+                                                q.setFilterById(downloadId);
+                                                Cursor cursor = manager.query(q);
+                                                cursor.moveToFirst();
+                                                @SuppressLint("Range") int bytes_downloaded = cursor.getInt(cursor
+                                                        .getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+                                                int bytes_total = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+                                                if (cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL) {
+                                                    downloading = false;
+                                                }
+                                                final int dl_progress = (int) ((bytes_downloaded * 100L) / bytes_total);
+                                                getActivity().runOnUiThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        progressIndicator.setProgress(dl_progress);
+                                                    }
+                                                });
+                                                //Log.d(Constants.MAIN_VIEW_ACTIVITY, statusMessage(cursor));
+                                                cursor.close();
+                                            }
+                                        }
+                                    }).start();
                                 }
                             }).addOnFailureListener(new OnFailureListener() {
                                 @Override
@@ -868,8 +1064,7 @@ public class StorageFragment extends Fragment {
 
     private void uploadEncryptFileBtnClick() {
 
-        askPassphrase();
-
+        //askPassphrase();
 
         // just a pre check
         if (!passphrasePreCheck()) return;

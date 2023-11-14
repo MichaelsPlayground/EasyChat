@@ -47,6 +47,15 @@ public class StorageReferenceAdapter extends RecyclerView.Adapter<StorageReferen
         return arrayList.size();
     }
 
+    public ArrayList<StorageReference> getArrayList() {
+        return arrayList;
+    }
+
+    public void removeItem(int position) {
+        arrayList.remove(position);
+        notifyItemRemoved(position);
+    }
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
         //ImageView imageView;
         TextView textView;
