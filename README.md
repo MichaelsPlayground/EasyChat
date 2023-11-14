@@ -1,6 +1,24 @@
 # Firebase Chat App Extended
 
-Note: This is an extended version of the original "Android_Chat_Application".
+Note: This is an **extended version** of the original "Android_Chat_Application". The chats are stored in a **Firestore real time database**.
+
+It allows to upload and download files or images from shared folders like "Downloads" to **Firebase Cloud Storage**. The uploads can be secured by 
+encrypting the files using this algorithm: **AES-256 GCM mode**, the encryption key is derived from an entered passphrase using a **PBKDF2** key 
+derivative program using the algorithm **PBKDF2WithHmacSHA256**.
+
+These fragments are enabled:
+
+## Chats fragment
+
+## Files fragment
+
+
+
+## Profile
+
+
+
+
 
 Welcome to the Firebase Chat App repository! This app enables real-time chat functionality using Firebase as the backend. Below is a list of key files and their functionalities:
 

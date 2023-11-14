@@ -11,7 +11,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -48,7 +47,6 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.ListResult;
@@ -66,7 +64,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -84,21 +81,14 @@ import de.androidcrypto.easychat.model.UserModel;
 import de.androidcrypto.easychat.utils.AndroidUtil;
 import de.androidcrypto.easychat.utils.FirebaseUtil;
 
-public class StorageFragment extends Fragment {
-
-    // upload section
-    private Button uploadUnencryptedFile, uploadUnencryptedImage;
-    private Button uploadEncryptedFile, uploadEncryptedImage;
-
-    // download section
-
+public class StorageFragment_v1 extends Fragment {
 
     private Button storageListDirectories, selectImage, uploadImage, listImages, listFilesForDownload, selectFile, uploadFile;
 
     private Button listFilesForDownload2;
     private com.google.android.material.textfield.TextInputLayout passphraseLayout;
     private com.google.android.material.textfield.TextInputEditText passphrase;
-
+    private Button uploadEncryptFile, uploadEncryptImage;
     private Button encryptFile, decryptFile, downloadFile, downloadDecryptFile;
 
     private Button deleteFile, deleteImage;
@@ -121,7 +111,7 @@ public class StorageFragment extends Fragment {
     private static final int NUMBER_OF_PBKDF2_ITERATIONS = 10000;
     private String fileStorageReference; // it filled when sending the Intent(Intent.ACTION_OPEN_DOCUMENT), data from FirebaseUtil e.g. ENCRYPTED_FILES_FOLDER_NAME
     private SwipeController swipeController = null;
-    public StorageFragment() {
+    public StorageFragment_v1() {
 
     }
 
@@ -148,14 +138,6 @@ public class StorageFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_storage, container, false);
 
-        // upload section
-        uploadUnencryptedFile = view.findViewById(R.id.storage_upload_unencrypted_file_btn);
-        uploadUnencryptedImage = view.findViewById(R.id.storage_upload_unencrypted_image_btn);
-        uploadEncryptedFile = view.findViewById(R.id.storage_upload_encrypt_file_btn);
-        uploadEncryptedImage = view.findViewById(R.id.storage_upload_encrypt_image_btn);
-
-        // download section
-
         storageListDirectories = view.findViewById(R.id.storage_list_directories_btn);
         storageRecyclerView = view.findViewById(R.id.storage_recyclerview);
         selectImage = view.findViewById(R.id.storage_select_image_btn);
@@ -174,7 +156,8 @@ public class StorageFragment extends Fragment {
 
         passphraseLayout = view.findViewById(R.id.etStoragePassphraseLayout);
         passphrase = view.findViewById(R.id.etStoragePassphrase);
-
+        uploadEncryptFile = view.findViewById(R.id.storage_upload_encrypt_file_btn);
+        uploadEncryptImage = view.findViewById(R.id.storage_upload_encrypt_image_btn);
 
         downloadFile = view.findViewById(R.id.storage_download_file_btn);
         downloadDecryptFile = view.findViewById(R.id.storage_download_decrypt_file_btn);
@@ -200,31 +183,6 @@ public class StorageFragment extends Fragment {
         ActivityCompat.requestPermissions(getActivity(),
                 new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE},
                 1);
-
-        /**
-         * section for uploads
-         */
-
-        uploadUnencryptedFile.setOnClickListener((v -> {
-            uploadUnencryptedFileBtnClick();
-        }));
-
-        uploadUnencryptedImage.setOnClickListener((v -> {
-            uploadUnencryptedImageBtnClick();
-        }));
-
-        uploadEncryptedFile.setOnClickListener((v -> {
-            uploadEncryptFileBtnClick();
-        }));
-
-        uploadEncryptedImage.setOnClickListener((v -> {
-            uploadEncryptImageBtnClick();
-        }));
-
-
-        /**
-         * section for downloads
-         */
 
 
         // see https://github.com/Everyday-Programmer/Firebase-Directory-Listing-Android/tree/main/app/src/main/java/com/example/firebasefileslisting
@@ -749,7 +707,13 @@ public class StorageFragment extends Fragment {
             decryptFileBtnClick();
         }));
 
+        uploadEncryptFile.setOnClickListener((v -> {
+            uploadEncryptFileBtnClick();
+        }));
 
+        uploadEncryptImage.setOnClickListener((v -> {
+            uploadEncryptImageBtnClick();
+        }));
 
         downloadFile.setOnClickListener((v -> {
             downloadFileBtnClick();
@@ -785,146 +749,6 @@ public class StorageFragment extends Fragment {
             defaultUiSettings(); // disable upload buttons
         }
     };
-
-    /**
-     * section for file and image uploads
-     */
-
-    private void uploadEncryptFileBtnClick() {
-
-        //askPassphrase();
-
-        // just a pre check
-        if (!passphrasePreCheck()) return;
-
-        // select a file in download folder, encrypt it and upload it to firebase cloud storage
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("*/*");
-        // Optionally, specify a URI for the file that should appear in the
-        // system file picker when it loads.
-        boolean pickerInitialUri = false;
-        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
-        fileStorageReference = FirebaseUtil.ENCRYPTED_FILES_FOLDER_NAME;
-        fileUploadEncryptChooserActivityResultLauncher.launch(intent);
-    }
-
-    private void uploadEncryptImageBtnClick() {
-
-        // just a pre check
-        if (!passphrasePreCheck()) return;
-
-        // select an image in download folder, encrypt it and upload it to firebase cloud storage
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("image/*");
-        // Optionally, specify a URI for the file that should appear in the
-        // system file picker when it loads.
-        boolean pickerInitialUri = false;
-        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
-        fileStorageReference = FirebaseUtil.ENCRYPTED_IMAGES_FOLDER_NAME;
-        fileUploadEncryptChooserActivityResultLauncher.launch(intent);
-    }
-
-    ActivityResultLauncher<Intent> fileUploadEncryptChooserActivityResultLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<ActivityResult>() {
-                @Override
-                public void onActivityResult(ActivityResult result) {
-                    if (result.getResultCode() == Activity.RESULT_OK) {
-                        // There are no request codes
-                        Intent resultData = result.getData();
-                        // The result data contains a URI for the document or directory that
-                        // the user selected.
-                        if (resultData != null) {
-                            selectedFileUri = resultData.getData();
-                            String fileStorageReferenceLocal = fileStorageReference;
-                            fileStorageReference = ""; // clear after usage
-
-                            FileInformation fileInformation = getFileInformationFromUri(selectedFileUri);
-                            if (fileStorageReferenceLocal.equals(FirebaseUtil.ENCRYPTED_FILES_FOLDER_NAME)) {
-                                fileInformation.setFileStorage(FirebaseUtil.ENCRYPTED_FILES_FOLDER_NAME);
-                            } else {
-                                fileInformation.setFileStorage(FirebaseUtil.ENCRYPTED_IMAGES_FOLDER_NAME);
-                            }
-                            System.out.println("fileInformation:\n" +
-                                    "fileName: " + fileInformation.getFileName() + "\n" +
-                                    "fileSize: " + fileInformation.getFileSize() + "\n" +
-                                    "fileStorage: " + fileInformation.getFileStorage()
-                            );
-
-                            if (!passphrasePreCheck()) return;
-                            int passphraseLength = passphrase.length();
-                            // get the passphrase as char[]
-                            char[] passphraseChars = new char[passphraseLength];
-                            passphrase.getText().getChars(0, passphraseLength, passphraseChars, 0);
-
-                            // now encrypt the file to internal cache
-                            String cacheFilename = fileInformation.getFileName() + ".enc";
-                            File encryptedFile = new File(getContext().getCacheDir(), cacheFilename);
-                            encryptedFilename = encryptedFile.getAbsolutePath();
-                            //boolean success = Cryptography.encryptGcmFileBufferedCipherOutputStreamToCacheFile(getContext(), selectedFileUri, encryptedFilename, passphraseChars, NUMBER_OF_PBKDF2_ITERATIONS);
-                            boolean success = Cryptography.encryptGcmFileBufferedCipherOutputStreamToCacheFile(getContext(), selectedFileUri, encryptedFilename, passphraseChars, 1000);
-                            Toast.makeText(getActivity(), "encryptGcmFileBufferedCipherOutputStreamToCacheFile: " + success, Toast.LENGTH_SHORT).show();
-
-                            // now upload the encrypted file / image
-                            StorageReference ref;
-                            if (fileStorageReferenceLocal.equals(FirebaseUtil.ENCRYPTED_FILES_FOLDER_NAME)) {
-                                ref = FirebaseUtil.currentUserStorageEncryptedFilesReference(cacheFilename);
-                            } else {
-                                ref = FirebaseUtil.currentUserStorageEncryptedImagesReference(cacheFilename);
-                            }
-                            if (success) {
-                                Uri file = Uri.fromFile(encryptedFile);
-                                StorageMetadata storageMetadata = new StorageMetadata.Builder()
-                                        .setContentType(getContext().getContentResolver().getType(file))
-                                        .build();
-                                ref.putFile(file, storageMetadata).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                                    @Override
-                                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                        System.out.println("*** upload onSuccess");
-                                        Toast.makeText(getContext(), "File Uploaded!!", Toast.LENGTH_LONG).show();
-                                        ref.getDownloadUrl();
-                                        // get download url
-                                        ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                            @Override
-                                            public void onSuccess(Uri uri) {
-                                                fileInformation.setDownloadUrl(uri);
-                                                fileInformation.setTimestamp(AndroidUtil.getTimestamp());
-                                                addFileInformationToUserCollection(fileInformation);
-                                                // delete file in cache folder
-                                                boolean success = deleteCacheFile(encryptedFile);
-                                                Toast.makeText(getContext(), "delete file in cache folder success: " + success, Toast.LENGTH_SHORT).show();
-                                            }
-                                        });
-                                    }
-                                }).addOnFailureListener(new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception e) {
-                                        System.out.println("*** upload onFailure");
-                                        Toast.makeText(getContext(), "Failed!" + e.getMessage(), Toast.LENGTH_LONG).show();
-                                    }
-                                }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-                                    @Override
-                                    public void onProgress(@NonNull UploadTask.TaskSnapshot snapshot) {
-                                        progressIndicator.setMax(Math.toIntExact(snapshot.getTotalByteCount()));
-                                        progressIndicator.setProgress(Math.toIntExact(snapshot.getBytesTransferred()));
-                                    }
-                                });
-                            }
-                        }
-                    }
-                }
-            });
-
-    /**
-     * section for download files and images
-     */
-
-
-
-
-
 
     void selectFileBtnClick() {
         // https://developer.android.com/training/data-storage/shared/documents-files
@@ -1061,8 +885,6 @@ public class StorageFragment extends Fragment {
             }
         });
     }
-
-
 
     private void uploadFile(Uri uri) {
         System.out.println("*** uploadFileUri: " + uri);
@@ -1239,7 +1061,133 @@ public class StorageFragment extends Fragment {
                 }
             });
 
+    private void uploadEncryptFileBtnClick() {
 
+        //askPassphrase();
+
+        // just a pre check
+        if (!passphrasePreCheck()) return;
+
+        // select a file in download folder, encrypt it and upload it to firebase cloud storage
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        // Optionally, specify a URI for the file that should appear in the
+        // system file picker when it loads.
+        boolean pickerInitialUri = false;
+        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
+        fileStorageReference = FirebaseUtil.ENCRYPTED_FILES_FOLDER_NAME;
+        fileUploadEncryptChooserActivityResultLauncher.launch(intent);
+    }
+
+    private void uploadEncryptImageBtnClick() {
+
+        // just a pre check
+        if (!passphrasePreCheck()) return;
+
+        // select an image in download folder, encrypt it and upload it to firebase cloud storage
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("image/*");
+        // Optionally, specify a URI for the file that should appear in the
+        // system file picker when it loads.
+        boolean pickerInitialUri = false;
+        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
+        fileStorageReference = FirebaseUtil.ENCRYPTED_IMAGES_FOLDER_NAME;
+        fileUploadEncryptChooserActivityResultLauncher.launch(intent);
+    }
+
+    ActivityResultLauncher<Intent> fileUploadEncryptChooserActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        // There are no request codes
+                        Intent resultData = result.getData();
+                        // The result data contains a URI for the document or directory that
+                        // the user selected.
+                        if (resultData != null) {
+                            selectedFileUri = resultData.getData();
+                            String fileStorageReferenceLocal = fileStorageReference;
+                            fileStorageReference = ""; // clear after usage
+
+                            FileInformation fileInformation = getFileInformationFromUri(selectedFileUri);
+                            if (fileStorageReferenceLocal.equals(FirebaseUtil.ENCRYPTED_FILES_FOLDER_NAME)) {
+                                fileInformation.setFileStorage(FirebaseUtil.ENCRYPTED_FILES_FOLDER_NAME);
+                            } else {
+                                fileInformation.setFileStorage(FirebaseUtil.ENCRYPTED_IMAGES_FOLDER_NAME);
+                            }
+                            System.out.println("fileInformation:\n" +
+                                    "fileName: " + fileInformation.getFileName() + "\n" +
+                                    "fileSize: " + fileInformation.getFileSize() + "\n" +
+                                    "fileStorage: " + fileInformation.getFileStorage()
+                                    );
+
+                            if (!passphrasePreCheck()) return;
+                            int passphraseLength = passphrase.length();
+                            // get the passphrase as char[]
+                            char[] passphraseChars = new char[passphraseLength];
+                            passphrase.getText().getChars(0, passphraseLength, passphraseChars, 0);
+
+                            // now encrypt the file to internal cache
+                            String cacheFilename = fileInformation.getFileName() + ".enc";
+                            File encryptedFile = new File(getContext().getCacheDir(), cacheFilename);
+                            encryptedFilename = encryptedFile.getAbsolutePath();
+                            //boolean success = Cryptography.encryptGcmFileBufferedCipherOutputStreamToCacheFile(getContext(), selectedFileUri, encryptedFilename, passphraseChars, NUMBER_OF_PBKDF2_ITERATIONS);
+                            boolean success = Cryptography.encryptGcmFileBufferedCipherOutputStreamToCacheFile(getContext(), selectedFileUri, encryptedFilename, passphraseChars, 1000);
+                            Toast.makeText(getActivity(), "encryptGcmFileBufferedCipherOutputStreamToCacheFile: " + success, Toast.LENGTH_SHORT).show();
+
+                            // now upload the encrypted file / image
+                            StorageReference ref;
+                            if (fileStorageReferenceLocal.equals(FirebaseUtil.ENCRYPTED_FILES_FOLDER_NAME)) {
+                                ref = FirebaseUtil.currentUserStorageEncryptedFilesReference(cacheFilename);
+                            } else {
+                                ref = FirebaseUtil.currentUserStorageEncryptedImagesReference(cacheFilename);
+                            }
+                            if (success) {
+                                Uri file = Uri.fromFile(encryptedFile);
+                                StorageMetadata storageMetadata = new StorageMetadata.Builder()
+                                        .setContentType(getContext().getContentResolver().getType(file))
+                                        .build();
+                                ref.putFile(file, storageMetadata).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                    @Override
+                                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                        System.out.println("*** upload onSuccess");
+                                        Toast.makeText(getContext(), "File Uploaded!!", Toast.LENGTH_LONG).show();
+                                        ref.getDownloadUrl();
+                                        // get download url
+                                        ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                            @Override
+                                            public void onSuccess(Uri uri) {
+                                                fileInformation.setDownloadUrl(uri);
+                                                fileInformation.setTimestamp(AndroidUtil.getTimestamp());
+                                                addFileInformationToUserCollection(fileInformation);
+                                                // delete file in cache folder
+                                                boolean success = deleteCacheFile(encryptedFile);
+                                                Toast.makeText(getContext(), "delete file in cache folder success: " + success, Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        System.out.println("*** upload onFailure");
+                                        Toast.makeText(getContext(), "Failed!" + e.getMessage(), Toast.LENGTH_LONG).show();
+                                    }
+                                }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                                    @Override
+                                    public void onProgress(@NonNull UploadTask.TaskSnapshot snapshot) {
+                                        progressIndicator.setMax(Math.toIntExact(snapshot.getTotalByteCount()));
+                                        progressIndicator.setProgress(Math.toIntExact(snapshot.getBytesTransferred()));
+                                    }
+                                });
+                            }
+
+                        }
+                    }
+                }
+            });
 
     private boolean deleteCacheFile(File file) {
         if (file == null) return true; // if there is not file it returns true

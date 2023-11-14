@@ -5,4 +5,6 @@
 
     <string name="fcm_message">FCM Message</string>
     <string name="default_notification_channel_id">fcm_default_channel</string>
+    <string name="header_files_fragment">File storage</string>
+    <string name="upload_files_fragment">Upload section (files or images)</string>
 </resources>
