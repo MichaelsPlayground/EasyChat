@@ -834,13 +834,15 @@ public class StorageFragment extends Fragment {
 
                             FileInformation fileInformation = getFileInformationFromUri(selectedFileUri);
                             StorageReference ref;
-
+                            String selectedFolder;
                             if (fileStorageReferenceLocal.equals(FirebaseUtil.FILES_FOLDER_NAME)) {
                                 ref = FirebaseUtil.currentUserStorageUnencryptedFilesReference(fileInformation.getFileName());
-                                fileInformation.setFileStorage(FirebaseUtil.FILES_FOLDER_NAME);
+                                selectedFolder = FirebaseUtil.FILES_FOLDER_NAME;
+                                fileInformation.setFileStorage(selectedFolder);
                             } else {
                                 ref = FirebaseUtil.currentUserStorageUnencryptedImagesReference(fileInformation.getFileName());
-                                fileInformation.setFileStorage(FirebaseUtil.IMAGES_FOLDER_NAME);
+                                selectedFolder = FirebaseUtil.IMAGES_FOLDER_NAME;
+                                fileInformation.setFileStorage(selectedFolder);
                             }
                             // now upload the  file / image
                             ref.putFile(selectedFileUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
@@ -854,7 +856,8 @@ public class StorageFragment extends Fragment {
                                         public void onSuccess(Uri uri) {
                                             fileInformation.setDownloadUrl(uri);
                                             fileInformation.setTimestamp(AndroidUtil.getTimestamp());
-                                            addFileInformationToUserCollection(fileInformation);
+                                            addFileInformationToUserCollection(selectedFolder, fileInformation.getFileName(), fileInformation);
+                                            //addFileInformationToUserCollection(fileInformation);
                                         }
                                     });
                                 }
@@ -934,12 +937,15 @@ public class StorageFragment extends Fragment {
                             String cacheFilename = fileInformation.getFileName() + ".enc";
                             File encryptedFile = new File(getContext().getCacheDir(), cacheFilename);
                             encryptedFilename = encryptedFile.getAbsolutePath();
+                            String selectedFolder;
                             if (fileStorageReferenceLocal.equals(FirebaseUtil.ENCRYPTED_FILES_FOLDER_NAME)) {
                                 ref = FirebaseUtil.currentUserStorageEncryptedFilesReference(cacheFilename);
-                                fileInformation.setFileStorage(FirebaseUtil.ENCRYPTED_FILES_FOLDER_NAME);
+                                selectedFolder = FirebaseUtil.ENCRYPTED_FILES_FOLDER_NAME;
+                                fileInformation.setFileStorage(selectedFolder);
                             } else {
                                 ref = FirebaseUtil.currentUserStorageEncryptedImagesReference(cacheFilename);
-                                fileInformation.setFileStorage(FirebaseUtil.ENCRYPTED_IMAGES_FOLDER_NAME);
+                                selectedFolder = FirebaseUtil.ENCRYPTED_IMAGES_FOLDER_NAME;
+                                fileInformation.setFileStorage(selectedFolder);
                             }
 
                             if (!passphrasePreCheck()) return;
@@ -967,7 +973,8 @@ public class StorageFragment extends Fragment {
                                             public void onSuccess(Uri uri) {
                                                 fileInformation.setDownloadUrl(uri);
                                                 fileInformation.setTimestamp(AndroidUtil.getTimestamp());
-                                                addFileInformationToUserCollection(fileInformation);
+                                                //addFileInformationToUserCollection(fileInformation);
+                                                addFileInformationToUserCollection(selectedFolder, fileInformation.getFileName(), fileInformation);
                                                 // delete file in cache folder
                                                 boolean success = deleteCacheFile(encryptedFile);
                                                 Toast.makeText(getContext(), "delete file in cache folder success: " + success, Toast.LENGTH_SHORT).show();
@@ -991,6 +998,23 @@ public class StorageFragment extends Fragment {
                     }
                 }
             });
+
+    private void addFileInformationToUserCollection(String subfolder, String filename, FileInformation fileInformation) {
+        FirebaseUtil.currentUserFilesCollectionReference(subfolder, filename)
+                .set(fileInformation)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void unused) {
+                        AndroidUtil.showToast(getContext(), "Filestore entry added successfully");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        AndroidUtil.showToast(getContext(), "Filestore entry adding failed");
+                    }
+                });
+    }
 
     private void addFileInformationToUserCollection(FileInformation fileInformation) {
         FirebaseUtil.currentUserFilesCollectionReference().add(fileInformation)

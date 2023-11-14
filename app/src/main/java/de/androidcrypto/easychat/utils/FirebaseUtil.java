@@ -21,9 +21,9 @@ public class FirebaseUtil {
     public static final String USERS_FOLDER_NAME = "users";
     public static final String CHATROOMS_FOLDER_NAME = "chatrooms";
     public static final String CHATS_FOLDER_NAME = "chats";
-    public static final String FILES_FOLDER_NAME = "files";
+    public static final String FILES_FOLDER_NAME = "files_une";
     public static final String ENCRYPTED_FILES_FOLDER_NAME = "files_enc";
-    public static final String IMAGES_FOLDER_NAME = "images";
+    public static final String IMAGES_FOLDER_NAME = "images_une";
     public static final String ENCRYPTED_IMAGES_FOLDER_NAME = "images_enc";
     public static final String PROFILE_PIC_FOLDER_NAME = "profile_pic";
     public static boolean isLoggedIn(){
@@ -72,6 +72,10 @@ public class FirebaseUtil {
     // appended
     public static CollectionReference currentUserFilesCollectionReference(){
         return FirebaseFirestore.getInstance().collection(USERS_FOLDER_NAME).document(currentUserId()).collection(FILES_FOLDER_NAME);
+    }
+
+    public static DocumentReference currentUserFilesCollectionReference(String subfolder, String filename){
+        return FirebaseFirestore.getInstance().collection(USERS_FOLDER_NAME).document(currentUserId()).collection(subfolder).document(filename);
     }
 
     public static StorageReference currentUserStorageFilesReference() {
