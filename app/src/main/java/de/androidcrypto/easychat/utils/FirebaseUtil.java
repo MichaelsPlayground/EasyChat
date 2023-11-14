@@ -75,6 +75,7 @@ public class FirebaseUtil {
     }
 
     public static DocumentReference currentUserFilesCollectionReference(String subfolder, String filename){
+        System.out.println("*** FirebaseUtil subfolder: " + subfolder + " filename: " + filename);
         return FirebaseFirestore.getInstance().collection(USERS_FOLDER_NAME).document(currentUserId()).collection(subfolder).document(filename);
     }
 

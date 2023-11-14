@@ -836,10 +836,12 @@ public class StorageFragment extends Fragment {
                             StorageReference ref;
                             String selectedFolder;
                             if (fileStorageReferenceLocal.equals(FirebaseUtil.FILES_FOLDER_NAME)) {
+                                System.out.println("*** fileStorageReferenceLocal.equals(FirebaseUtil.FILES_FOLDER_NAME");
                                 ref = FirebaseUtil.currentUserStorageUnencryptedFilesReference(fileInformation.getFileName());
                                 selectedFolder = FirebaseUtil.FILES_FOLDER_NAME;
                                 fileInformation.setFileStorage(selectedFolder);
                             } else {
+                                System.out.println("*** fileStorageReferenceLocal. NOT equals(FirebaseUtil.FILES_FOLDER_NAME");
                                 ref = FirebaseUtil.currentUserStorageUnencryptedImagesReference(fileInformation.getFileName());
                                 selectedFolder = FirebaseUtil.IMAGES_FOLDER_NAME;
                                 fileInformation.setFileStorage(selectedFolder);
@@ -856,6 +858,7 @@ public class StorageFragment extends Fragment {
                                         public void onSuccess(Uri uri) {
                                             fileInformation.setDownloadUrl(uri);
                                             fileInformation.setTimestamp(AndroidUtil.getTimestamp());
+                                            System.out.println("*** selectedFolder: " + selectedFolder);
                                             addFileInformationToUserCollection(selectedFolder, fileInformation.getFileName(), fileInformation);
                                             //addFileInformationToUserCollection(fileInformation);
                                         }
