@@ -12,7 +12,30 @@ These fragments are enabled:
 
 ## Files fragment
 
+The files ("Storage") fragment consists of two parts - an **uploading section** and a **downloading section**. They are 
+described separately. The main purpose is the safe storage of files of the user and to provide a link to these files for 
+other users.
 
+### Uploading section
+
+The upload is divided in two similar methods: uploading of "files" and "images". As an "image" is also a "file" but not the other way round, 
+the file chooser in the "images" way won't show any other files except images. Both file types allow an **unencrypted upload** or and 
+**encrypted upload**.
+
+When using the "encrypted" variant you need to provide an encryption **passphrase** that has a minimum length of 6 characters. This passphrase 
+is stored nowhere so do not forget the passphrase. Note: **there is no recovery of the original file when you loose your passphrase** ! 
+And when I say "no recovery" there is no way to get the unencrypted file back, so be very careful.
+
+### Downloading section
+
+The download is divided as well in a "file" or "images" variant and all can be download from encrypted sources as well. For decryption you need 
+to provide the same passphrase as it was used on encryption side.
+
+The content of each folder (unencrypted files, unencrypted images, encrypted files and encrypted images) is shown in a RecyclerView object - simply click 
+on the entry and the  download will start.
+
+If you **swipe the entry to the left** a "deletion button" show up and with click on the symbol this entry will get **deleted without any 
+further confirmation**.
 
 ## Profile
 
