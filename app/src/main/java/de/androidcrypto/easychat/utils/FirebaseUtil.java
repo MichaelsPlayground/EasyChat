@@ -78,6 +78,10 @@ public class FirebaseUtil {
         return FirebaseStorage.getInstance().getReference().child(currentUserId()).child(FILES_FOLDER_NAME);
     }
 
+    public static StorageReference currentUserStorageUnencryptedFilesReference(String filename) {
+        return FirebaseStorage.getInstance().getReference().child(currentUserId()).child(FILES_FOLDER_NAME + "/" + filename);
+    }
+
     public static StorageReference currentUserStorageEncryptedFilesReference() {
         return FirebaseStorage.getInstance().getReference().child(currentUserId()).child(ENCRYPTED_FILES_FOLDER_NAME);
     }
@@ -87,6 +91,10 @@ public class FirebaseUtil {
 
     public static StorageReference currentUserStorageImagesReference() {
         return FirebaseStorage.getInstance().getReference().child(currentUserId()).child(IMAGES_FOLDER_NAME);
+    }
+
+    public static StorageReference currentUserStorageUnencryptedImagesReference(String filename) {
+        return FirebaseStorage.getInstance().getReference().child(currentUserId()).child(IMAGES_FOLDER_NAME + "/" + filename);
     }
 
     public static StorageReference currentUserStorageEncryptedImagesReference() {
