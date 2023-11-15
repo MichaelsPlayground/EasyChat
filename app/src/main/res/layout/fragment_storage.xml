@@ -96,7 +96,7 @@
                 android:orientation="horizontal">
 
                 <Button
-                    android:id="@+id/storage_upload_unencrypted_file_btn"
+                    android:id="@+id/btnStorageUploadUnencryptedFile"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="2dp"
@@ -105,7 +105,7 @@
                     android:text="file (unencrypted)" />
 
                 <Button
-                    android:id="@+id/storage_upload_unencrypted_image_btn"
+                    android:id="@+id/btnStorageUploadUnencryptedImage"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="2dp"
@@ -123,7 +123,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="0dp"
                 android:layout_marginEnd="8dp"
                 android:hint="en-/decryption passphrase, min. 6 chars"
                 app:boxCornerRadiusBottomEnd="5dp"
@@ -131,7 +131,7 @@
                 app:boxCornerRadiusTopEnd="5dp"
                 app:boxCornerRadiusTopStart="5dp"
                 app:counterEnabled="true"
-                app:counterMaxLength="16"
+                app:counterMaxLength="30"
                 app:endIconMode="clear_text"
                 android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -145,7 +145,7 @@
                     android:ellipsize="end"
                     android:focusable="true"
                     android:inputType="text|textNoSuggestions|textPersonName"
-                    android:maxLength="16"
+                    android:maxLength="30"
                     android:text=""
                     tools:ignore="KeyboardInaccessibleWidget" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -160,7 +160,7 @@
                 android:orientation="horizontal">
 
                 <Button
-                    android:id="@+id/storage_upload_encrypt_file_btn"
+                    android:id="@+id/btnStorageUploadEncryptedFile"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="2dp"
@@ -170,7 +170,7 @@
                     android:text="file (encrypted)" />
 
                 <Button
-                    android:id="@+id/storage_upload_encrypt_image_btn"
+                    android:id="@+id/btnStorageUploadEncryptedImage"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="2dp"
@@ -263,7 +263,7 @@
                 android:orientation="horizontal">
 
                 <Button
-                    android:id="@+id/storage_Download_unencrypted_file_btn"
+                    android:id="@+id/btnStorageDownloadUnencryptedFile"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="2dp"
@@ -272,7 +272,7 @@
                     android:text="file (unencrypted)" />
 
                 <Button
-                    android:id="@+id/storage_Download_unencrypted_image_btn"
+                    android:id="@+id/btnStorageDownloadUnencryptedImage"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="2dp"
@@ -290,7 +290,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="0dp"
                 android:layout_marginEnd="8dp"
                 android:hint="en-/decryption passphrase, min. 6 chars"
                 app:boxCornerRadiusBottomEnd="5dp"
@@ -298,7 +298,7 @@
                 app:boxCornerRadiusTopEnd="5dp"
                 app:boxCornerRadiusTopStart="5dp"
                 app:counterEnabled="true"
-                app:counterMaxLength="16"
+                app:counterMaxLength="30"
                 app:endIconMode="clear_text"
                 android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -312,7 +312,7 @@
                     android:ellipsize="end"
                     android:focusable="true"
                     android:inputType="text|textNoSuggestions|textPersonName"
-                    android:maxLength="16"
+                    android:maxLength="30"
                     android:text=""
                     tools:ignore="KeyboardInaccessibleWidget" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -327,7 +327,7 @@
                 android:orientation="horizontal">
 
                 <Button
-                    android:id="@+id/storage_Download_encrypt_file_btn"
+                    android:id="@+id/btnStorageDownloadEncryptedFile"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="2dp"
@@ -337,7 +337,7 @@
                     android:text="file (encrypted)" />
 
                 <Button
-                    android:id="@+id/storage_download_encrypt_image_btn"
+                    android:id="@+id/btnStorageDownloadEncryptedImage"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="2dp"
@@ -368,6 +368,36 @@
                 android:layout_marginTop="8dp"
                 app:dividerInsetEnd="8dp"
                 app:dividerInsetStart="8dp" />
+
+            <TextView
+                android:id="@+id/storage_warning"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/share_rounded_corner_light_orange_with_border_error"
+                android:padding="4dp"
+                android:text="The app will IMMEDIATELY DELETE the clicked file without any further confirmation !"
+                android:textAlignment="center"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/storage_recyclerview"
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
+
+                />
+
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:dividerInsetEnd="8dp"
+                app:dividerInsetStart="8dp" />
+
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -555,27 +585,7 @@
                 android:background="@drawable/btn_rounded_corner"
                 android:text="List directories in STORAGE" />
 
-            <TextView
-                android:id="@+id/storage_warning"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="8dp"
-                android:background="@drawable/share_rounded_corner_light_orange_with_border_error"
-                android:padding="4dp"
-                android:text="The app will IMMEDIATELY DELETE the clicked file without any further confirmation !"
-                android:textAlignment="center"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:visibility="gone" />
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/storage_recyclerview"
-                android:layout_width="match_parent"
-                android:layout_height="300dp"
-
-                />
 
 
             <ImageView

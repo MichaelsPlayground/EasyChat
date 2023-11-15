@@ -97,6 +97,15 @@ public class StorageFragment extends Fragment {
     private com.google.android.material.textfield.TextInputEditText uploadPassphrase;
 
     // download section
+    private RadioGroup rgDownload;
+    private RadioButton rbDownloadFile, rbDownloadImage, rbDownloadFileEncrypted, rbDownloadImageEncrypted;
+    private Button downloadUnencryptedFile, downloadUnencryptedImage;
+    private Button downloadEncryptedFile, downloadEncryptedImage;
+    private com.google.android.material.textfield.TextInputLayout downloadPassphraseLayout;
+    private com.google.android.material.textfield.TextInputEditText downloadPassphrase;
+    private String downloadSelector;
+    
+    
 
 
     private Button storageListDirectories, selectImage, uploadImage, listImages, listFilesForDownload, selectFile, uploadFile;
@@ -159,13 +168,26 @@ public class StorageFragment extends Fragment {
         rbUploadImage = view.findViewById(R.id.rbStorageUploadImage);
         rbUploadFileEncrypted = view.findViewById(R.id.rbStorageUploadFileEnc);
         rbUploadImageEncrypted = view.findViewById(R.id.rbStorageUploadImageEnc);
-        uploadUnencryptedFile = view.findViewById(R.id.storage_upload_unencrypted_file_btn);
-        uploadUnencryptedImage = view.findViewById(R.id.storage_upload_unencrypted_image_btn);
-        uploadEncryptedFile = view.findViewById(R.id.storage_upload_encrypt_file_btn);
-        uploadEncryptedImage = view.findViewById(R.id.storage_upload_encrypt_image_btn);
+        uploadUnencryptedFile = view.findViewById(R.id.btnStorageUploadUnencryptedFile);
+        uploadUnencryptedImage = view.findViewById(R.id.btnStorageUploadUnencryptedImage);
+        uploadEncryptedFile = view.findViewById(R.id.btnStorageUploadEncryptedFile);
+        uploadEncryptedImage = view.findViewById(R.id.btnStorageUploadEncryptedImage);
         uploadPassphraseLayout = view.findViewById(R.id.etStorageUploadPassphraseLayout);
         uploadPassphrase = view.findViewById(R.id.etStorageUploadPassphrase);
-
+        // download section
+        rgDownload = view.findViewById(R.id.rgStorageDownload);
+        rbDownloadFile = view.findViewById(R.id.rbStorageDownloadFile);
+        rbDownloadImage = view.findViewById(R.id.rbStorageDownloadImage);
+        rbDownloadFileEncrypted = view.findViewById(R.id.rbStorageDownloadFileEnc);
+        rbDownloadImageEncrypted = view.findViewById(R.id.rbStorageDownloadImageEnc);
+        downloadUnencryptedFile = view.findViewById(R.id.btnStorageDownloadUnencryptedFile);
+        downloadUnencryptedImage = view.findViewById(R.id.btnStorageDownloadUnencryptedImage);
+        downloadEncryptedFile = view.findViewById(R.id.btnStorageDownloadEncryptedFile);
+        downloadEncryptedImage = view.findViewById(R.id.btnStorageDownloadEncryptedImage);
+        downloadPassphraseLayout = view.findViewById(R.id.etStorageDownloadPassphraseLayout);
+        downloadPassphrase = view.findViewById(R.id.etStorageDownloadPassphrase);
+        
+        
         //uploadSectionVisibilityOff();
 
         // download section
@@ -179,6 +201,13 @@ public class StorageFragment extends Fragment {
         listFilesForDownload2 = view.findViewById(R.id.storage_list_files_for_download_2_btn);
         selectedImageView = view.findViewById(R.id.storage_image_view);
         progressIndicator = view.findViewById(R.id.storage_progress);
+
+        // preset is the unencrypted files selection
+        downloadSelector = FirebaseUtil.FILES_FOLDER_NAME;
+
+
+
+        // old ones
 
         selectFile = view.findViewById(R.id.storage_select_file_btn);
         uploadFile = view.findViewById(R.id.storage_upload_file_btn);
@@ -276,6 +305,70 @@ public class StorageFragment extends Fragment {
          * section for downloads
          */
 
+        View.OnClickListener rbDownloadFileListener = null;
+        rbDownloadFileListener = new View.OnClickListener() {
+            public void onClick(View v) {
+                downloadSectionVisibilityOff();
+                downloadUnencryptedFile.setVisibility(View.VISIBLE);
+                downloadSelector = FirebaseUtil.FILES_FOLDER_NAME;
+            }
+        };
+        rbDownloadFile.setOnClickListener(rbDownloadFileListener);
+
+        View.OnClickListener rbDownloadImageListener = null;
+        rbDownloadImageListener = new View.OnClickListener() {
+            public void onClick(View v) {
+                downloadSectionVisibilityOff();
+                downloadUnencryptedImage.setVisibility(View.VISIBLE);
+                downloadSelector = FirebaseUtil.IMAGES_FOLDER_NAME;
+            }
+        };
+        rbDownloadImage.setOnClickListener(rbDownloadImageListener);
+
+        View.OnClickListener rbDownloadFileEncListener = null;
+        rbDownloadFileEncListener = new View.OnClickListener() {
+            public void onClick(View v) {
+                downloadSectionVisibilityOff();
+                downloadEncryptedFile.setVisibility(View.VISIBLE);
+                downloadPassphraseLayout.setVisibility(View.VISIBLE);
+                downloadSelector = FirebaseUtil.ENCRYPTED_FILES_FOLDER_NAME;
+            }
+        };
+        rbDownloadFileEncrypted.setOnClickListener(rbDownloadFileEncListener);
+
+        View.OnClickListener rbDownloadImageEncListener = null;
+        rbDownloadImageEncListener = new View.OnClickListener() {
+            public void onClick(View v) {
+                downloadSectionVisibilityOff();
+                downloadEncryptedImage.setVisibility(View.VISIBLE);
+                downloadPassphraseLayout.setVisibility(View.VISIBLE);
+                downloadSelector = FirebaseUtil.ENCRYPTED_IMAGES_FOLDER_NAME;
+            }
+        };
+        rbDownloadImageEncrypted.setOnClickListener(rbDownloadImageEncListener);
+
+
+        downloadUnencryptedFile.setOnClickListener((v -> {
+            downloadFromSelectorBtnClick();
+            //downloadUnencryptedFileBtnClick();
+        }));
+
+        downloadUnencryptedImage.setOnClickListener((v -> {
+            downloadUnencryptedImageBtnClick();
+        }));
+
+        downloadEncryptedFile.setOnClickListener((v -> {
+            downloadEncryptedFileBtnClick();
+        }));
+
+        downloadEncryptedImage.setOnClickListener((v -> {
+            downloadEncryptedImageBtnClick();
+        }));
+
+
+        /**
+         * old methods
+         */
 
         // see https://github.com/Everyday-Programmer/Firebase-Directory-Listing-Android/tree/main/app/src/main/java/com/example/firebasefileslisting
         storageListDirectories.setOnClickListener((v -> {
@@ -1084,10 +1177,181 @@ public class StorageFragment extends Fragment {
      * section for download files and images
      */
 
+    private void downloadFromSelectorBtnClick() {
+        // downloadSelector contains the folder name on storage like FirebaseUtil.FILES_FOLDER_NAME = 'files_une'
+        // first we list the available files in this folder on Firebase Cloud Storage for selection by click
 
 
 
+        String actualUserId = FirebaseAuth.getInstance().getUid();
+        FirebaseStorage.getInstance().getReference().child(actualUserId).child("files").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
+            @Override
+            public void onSuccess(ListResult listResult) {
+                ArrayList<StorageFileModel> arrayList = new ArrayList<>();
+                ArrayList<StorageReference> arrayListSR = new ArrayList<>();
+                Iterator<StorageReference> i = listResult.getItems().iterator();
+                StorageReference ref;
+                while (i.hasNext()) {
+                    ref = i.next();
+                    arrayListSR.add(ref);
+                    StorageFileModel sfm = new StorageFileModel();
+                    sfm.setName(ref.getName());
 
+                    System.out.println("onSuccess() File name: " + ref.getName());
+                    System.out.println("*** ref.downloadUrl: " + ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            System.out.println("*** uri: " + uri + " ***");
+                            sfm.setUri(uri);
+                            arrayList.add(sfm);
+                            System.out.println("arrayList added");
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception exception) {
+                            // Handle any errors
+                            System.out.println("### Error: " + exception.getMessage() + " ###");
+                        }
+                    }));
+
+                }
+
+                System.out.println("*** arrayList has entries: " + arrayList.size() + " ***");
+
+                StorageReferenceAdapter adapterSR = new StorageReferenceAdapter(getContext(), arrayListSR);
+                storageRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+                storageRecyclerView.setAdapter(adapterSR);
+
+                // this is using class SwipeToDeleteCallback
+                // see: https://www.digitalocean.com/community/tutorials/android-recyclerview-swipe-to-delete-undo
+                SwipeToDeleteCallback swipeToDeleteCallback = new SwipeToDeleteCallback(getContext()) {
+                    @Override
+                    public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int i) {
+
+
+                        //final int position = viewHolder.getAdapterPosition(); // getAdapterPosition is deprecated
+                        final int position = viewHolder.getBindingAdapterPosition();
+                        final StorageReference item = adapterSR.getArrayList().get(position);
+                        //final String item = mAdapter.getData().get(position);
+
+                        adapterSR.removeItem(position);
+                        // todo remove from Storage and Firestore
+
+
+                        System.out.println("actual contents of the arraylist");
+                    }
+                };
+
+                ItemTouchHelper itemTouchhelper = new ItemTouchHelper(swipeToDeleteCallback);
+                itemTouchhelper.attachToRecyclerView(storageRecyclerView);
+
+                adapterSR.setOnItemClickListener(new StorageReferenceAdapter.OnItemClickListener() {
+                    @Override
+                    public void onClick(StorageReference storageReference) {
+                        System.out.println("*** clicked on name: " + storageReference.getName());
+
+                        // get the download url from task
+                        storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                // Got the download URL for 'users/me/profile.png'
+                                System.out.println("*** uri: " + uri + " ***");
+
+                                // set progressIndicator to 0
+                                progressIndicator.setProgress(0);
+                                DownloadManager.Request request = new DownloadManager.Request(uri);
+                                String title = null;
+                                try {
+                                    title = URLUtil.guessFileName(new URL(uri.toString()).toString(), null, null);
+                                } catch (MalformedURLException e) {
+                                    //throw new RuntimeException(e);
+                                    System.out.println("malformed url");
+                                }
+                                System.out.println("*** title: " + title);
+                                request.setTitle(title);
+
+                                request.setDescription("Downloading file, please wait");
+                                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
+                                //request.setDestinationInExternalFilesDir(getContext(), Environment.DIRECTORY_DOWNLOADS, "");
+                                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, title);
+
+                                DownloadManager manager = (DownloadManager) getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
+                                //Registering receiver in Download Manager
+                                getActivity().registerReceiver(onCompleted, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+                                long downloadId = manager.enqueue(request);
+                                System.out.println("reference: " + downloadId);
+                                Toast.makeText(getActivity(), "Downloading started, please wait...", Toast.LENGTH_SHORT).show();
+
+                                // progress
+                                new Thread(new Runnable() {
+                                    @SuppressLint("Range")
+                                    @Override
+                                    public void run() {
+                                        boolean downloading = true;
+                                        while (downloading) {
+                                            DownloadManager.Query q = new DownloadManager.Query();
+                                            q.setFilterById(downloadId);
+                                            Cursor cursor = manager.query(q);
+                                            cursor.moveToFirst();
+                                            @SuppressLint("Range") int bytes_downloaded = cursor.getInt(cursor
+                                                    .getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+                                            int bytes_total = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+                                            if (cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL) {
+                                                downloading = false;
+                                            }
+                                            final int dl_progress = (int) ((bytes_downloaded * 100L) / bytes_total);
+                                            getActivity().runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    progressIndicator.setProgress(dl_progress);
+                                                }
+                                            });
+                                            //Log.d(Constants.MAIN_VIEW_ACTIVITY, statusMessage(cursor));
+                                            cursor.close();
+                                        }
+                                    }
+                                }).start();
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception exception) {
+                                // Handle any errors
+                                System.out.println("### Error: " + exception.getMessage() + " ###");
+                            }
+                        });
+                    }
+                });
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(getActivity(), "There was an error while listing files", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+    }
+
+    // unencrypted download of files and images
+    private void downloadUnencryptedFileBtnClick() {
+
+    }
+
+    private void downloadUnencryptedImageBtnClick() {
+
+    }
+
+    // encrypted download of files and images
+    private void downloadEncryptedFileBtnClick() {
+
+    }
+
+    private void downloadEncryptedImageBtnClick() {
+
+    }
+
+    /**
+     * section for old methods
+     */
 
     void selectFileBtnClick() {
         // https://developer.android.com/training/data-storage/shared/documents-files
@@ -1385,8 +1649,6 @@ public class StorageFragment extends Fragment {
 
                             boolean success = Cryptography.decryptGcmFileBufferedCipherInputStreamFromCache(getContext(), encryptedFilename, selectedUri, passphrase, iterations);
                             Toast.makeText(getActivity(), "decryptGcmFileBufferedCipherOutputStreamFromCache: " + success, Toast.LENGTH_SHORT).show();
-
-
                         }
                     }
                 }
@@ -1629,6 +1891,14 @@ public class StorageFragment extends Fragment {
         uploadPassphraseLayout.setVisibility(View.GONE);
     }
 
+    private void downloadSectionVisibilityOff() {
+        downloadUnencryptedFile.setVisibility(View.GONE);
+        downloadUnencryptedImage.setVisibility(View.GONE);
+        downloadEncryptedFile.setVisibility(View.GONE);
+        downloadEncryptedImage.setVisibility(View.GONE);
+        downloadPassphraseLayout.setVisibility(View.GONE);
+    }
+    
 }
 
 
