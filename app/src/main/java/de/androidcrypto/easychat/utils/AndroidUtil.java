@@ -22,7 +22,7 @@ import de.androidcrypto.easychat.model.UserModel;
 public class AndroidUtil {
 
    public static  void showToast(Context context,String message){
-       Toast.makeText(context,message,Toast.LENGTH_LONG).show();
+       Toast.makeText(context,message,Toast.LENGTH_SHORT).show();
     }
 
     public static void passUserModelAsIntent(Intent intent, UserModel model){

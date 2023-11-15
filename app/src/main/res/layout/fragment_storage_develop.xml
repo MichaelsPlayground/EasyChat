@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_margin="20dp"
     android:orientation="vertical"
-    tools:context="de.androidcrypto.easychat.StorageFragment">
+    tools:context="de.androidcrypto.easychat.StorageFragment_Develop">
 
     <ScrollView
         android:id="@+id/svScrollView"
@@ -110,10 +110,10 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="2dp"
                     android:layout_weight="1"
-                    android:background="@drawable/btn_rounded_corner"
                     android:enabled="true"
-                    android:text="image (unencrypted)"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                    android:background="@drawable/btn_rounded_corner"
+                    android:text="image (unencrypted)" />
 
             </LinearLayout>
 
@@ -126,7 +126,6 @@
                 android:layout_marginTop="0dp"
                 android:layout_marginEnd="8dp"
                 android:hint="en-/decryption passphrase, min. 6 chars"
-                android:visibility="gone"
                 app:boxCornerRadiusBottomEnd="5dp"
                 app:boxCornerRadiusBottomStart="5dp"
                 app:boxCornerRadiusTopEnd="5dp"
@@ -134,6 +133,7 @@
                 app:counterEnabled="true"
                 app:counterMaxLength="30"
                 app:endIconMode="clear_text"
+                android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
@@ -165,9 +165,9 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="2dp"
                     android:layout_weight="1"
+                    android:visibility="gone"
                     android:background="@drawable/btn_rounded_corner"
-                    android:text="file (encrypted)"
-                    android:visibility="gone" />
+                    android:text="file (encrypted)" />
 
                 <Button
                     android:id="@+id/btnStorageUploadEncryptedImage"
@@ -175,10 +175,10 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="2dp"
                     android:layout_weight="1"
-                    android:background="@drawable/btn_rounded_corner"
                     android:enabled="true"
-                    android:text="image (encrypted)"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                    android:background="@drawable/btn_rounded_corner"
+                    android:text="image (encrypted)" />
 
             </LinearLayout>
 
@@ -268,9 +268,9 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="2dp"
                     android:layout_weight="1"
+                    android:visibility="gone"
                     android:background="@drawable/btn_rounded_corner"
-                    android:text="file (unencrypted)"
-                    android:visibility="gone" />
+                    android:text="file (unencrypted)" />
 
                 <Button
                     android:id="@+id/btnStorageDownloadUnencryptedImage"
@@ -278,10 +278,10 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="2dp"
                     android:layout_weight="1"
-                    android:background="@drawable/btn_rounded_corner"
                     android:enabled="true"
-                    android:text="image (unencrypted)"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                    android:background="@drawable/btn_rounded_corner"
+                    android:text="image (unencrypted)" />
 
             </LinearLayout>
 
@@ -294,7 +294,6 @@
                 android:layout_marginTop="0dp"
                 android:layout_marginEnd="8dp"
                 android:hint="en-/decryption passphrase, min. 6 chars"
-                android:visibility="gone"
                 app:boxCornerRadiusBottomEnd="5dp"
                 app:boxCornerRadiusBottomStart="5dp"
                 app:boxCornerRadiusTopEnd="5dp"
@@ -302,6 +301,7 @@
                 app:counterEnabled="true"
                 app:counterMaxLength="30"
                 app:endIconMode="clear_text"
+                android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
@@ -341,9 +341,9 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="2dp"
                     android:layout_weight="1"
+                    android:visibility="gone"
                     android:background="@drawable/btn_rounded_corner"
-                    android:text="file (encrypted)"
-                    android:visibility="gone" />
+                    android:text="file (encrypted)" />
 
                 <Button
                     android:id="@+id/btnStorageDownloadEncryptedImage"
@@ -351,10 +351,10 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="2dp"
                     android:layout_weight="1"
-                    android:background="@drawable/btn_rounded_corner"
                     android:enabled="true"
-                    android:text="image (encrypted)"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                    android:background="@drawable/btn_rounded_corner"
+                    android:text="image (encrypted)" />
 
             </LinearLayout>
 
@@ -407,12 +407,138 @@
                 app:dividerInsetEnd="8dp"
                 app:dividerInsetStart="8dp" />
 
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="0dp"
+                android:layout_marginEnd="8dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/storage_select_image_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="2dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_rounded_corner"
+                    android:text="select image" />
+
+                <Button
+                    android:id="@+id/storage_upload_image_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="2dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_rounded_corner"
+                    android:text="upload image" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="8dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/storage_select_file_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="2dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_rounded_corner"
+                    android:text="select file" />
+
+                <Button
+                    android:id="@+id/storage_upload_file_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="2dp"
+                    android:layout_weight="1"
+                    android:enabled="false"
+                    android:background="@drawable/btn_rounded_corner"
+                    android:text="upload file" />
+
+            </LinearLayout>
+
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="8dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/storage_encrypt_file_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="2dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_rounded_corner"
+                    android:text="encrypt file" />
+
+                <Button
+                    android:id="@+id/storage_decrypt_file_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="2dp"
+                    android:layout_weight="1"
+                    android:enabled="true"
+                    android:background="@drawable/btn_rounded_corner"
+                    android:text="decrypt file" />
+
+            </LinearLayout>
+
             <com.google.android.material.divider.MaterialDivider
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 app:dividerInsetEnd="8dp"
                 app:dividerInsetStart="8dp" />
+
+
+
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="8dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/storage_download_file_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="2dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_rounded_corner"
+                    android:text="download file" />
+
+                <Button
+                    android:id="@+id/storage_download_decrypt_file_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="2dp"
+                    android:layout_weight="1"
+                    android:enabled="true"
+                    android:background="@drawable/btn_rounded_corner"
+                    android:text="dl &amp; decrypt file" />
+
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -438,18 +564,70 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="2dp"
                     android:layout_weight="1"
-                    android:background="@drawable/btn_rounded_corner"
                     android:enabled="true"
+                    android:background="@drawable/btn_rounded_corner"
                     android:text="delete image" />
 
             </LinearLayout>
 
-            <com.google.android.material.divider.MaterialDivider
+            <Button
+                android:id="@+id/storage_list_files_for_download_btn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                app:dividerInsetEnd="8dp"
-                app:dividerInsetStart="8dp" />
+                android:layout_marginTop="12dp"
+                android:background="@drawable/btn_rounded_corner"
+                android:text="list files for download" />
+
+            <Button
+                android:id="@+id/storage_list_files_for_download_2_btn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/btn_rounded_corner"
+                android:text="list files for download 2" />
+
+            <Button
+                android:id="@+id/storage_list_directories_btn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/btn_rounded_corner"
+                android:text="List directories in STORAGE" />
+
+
+
+
+            <ImageView
+                android:id="@+id/storage_image_view"
+                android:layout_width="300sp"
+                android:layout_height="300sp"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="20sp" />
+
+
+            <Button
+                android:id="@+id/storage_list_images_btn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/btn_rounded_corner"
+                android:text="list images" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:layout_marginTop="20dp"
+                android:gravity="center_vertical"
+                android:orientation="vertical">
+
+                <Button
+                    android:id="@+id/profle_update_btn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/btn_rounded_corner"
+                    android:text="STORAGE" />
+
+            </LinearLayout>
 
         </LinearLayout>
 

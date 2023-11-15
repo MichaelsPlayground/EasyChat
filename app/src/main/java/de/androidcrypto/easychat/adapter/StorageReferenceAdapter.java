@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 
 import de.androidcrypto.easychat.R;
 import de.androidcrypto.easychat.model.StorageFileModel;
+import de.androidcrypto.easychat.utils.FirebaseUtil;
 
 public class StorageReferenceAdapter extends RecyclerView.Adapter<StorageReferenceAdapter.ViewHolder> {
 
@@ -39,6 +41,13 @@ public class StorageReferenceAdapter extends RecyclerView.Adapter<StorageReferen
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         //Glide.with(context).load(arrayList.get(position).getUri()).into(holder.imageView);
         holder.textView.setText(arrayList.get(position).getName());
+        StorageReference itemReference = arrayList.get(position).getParent();
+        if ((itemReference.equals(FirebaseUtil.currentUserStorageUnencryptedImagesReference())) ||
+                (itemReference.equals(FirebaseUtil.currentUserStorageEncryptedImagesReference()))) {
+            holder.imageView.setImageResource(R.drawable.outline_image_24);
+        } else {
+            holder.imageView.setImageResource(R.drawable.outline_file_copy_24);
+        }
         holder.itemView.setOnClickListener(view -> onItemClickListener.onClick(arrayList.get(position)));
     }
 
@@ -57,11 +66,11 @@ public class StorageReferenceAdapter extends RecyclerView.Adapter<StorageReferen
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        //ImageView imageView;
+        ImageView imageView;
         TextView textView;
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            //imageView = itemView.findViewById(R.id.list_item_image);
+            imageView = itemView.findViewById(R.id.list_item_image);
             textView = itemView.findViewById(R.id.list_item_title);
         }
     }

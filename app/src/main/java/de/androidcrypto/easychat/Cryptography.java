@@ -212,6 +212,22 @@ public class Cryptography {
         return true;
     }
 
+    public static boolean copyInputStreamFromInputStream(Context context, InputStream inputStream, Uri outputUri) {
+
+        try (BufferedInputStream in = new BufferedInputStream(inputStream);
+             OutputStream out = context.getContentResolver().openOutputStream(outputUri)) {
+            byte[] buffer = new byte[8192];
+            int nread;
+            while ((nread = in.read(buffer)) > 0) {
+                out.write(buffer, 0, nread);
+            }
+            out.flush();
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
+
     /**
      * section for internal converter
      */

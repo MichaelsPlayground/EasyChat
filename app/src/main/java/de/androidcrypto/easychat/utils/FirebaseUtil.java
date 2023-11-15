@@ -26,6 +26,12 @@ public class FirebaseUtil {
     public static final String IMAGES_FOLDER_NAME = "images_une";
     public static final String ENCRYPTED_IMAGES_FOLDER_NAME = "images_enc";
     public static final String PROFILE_PIC_FOLDER_NAME = "profile_pic";
+
+    public static final String STORAGE_LIST_BUTTON_UNENCRYPTED_FILES = "list unencrypted files";
+    public static final String STORAGE_LIST_BUTTON_ENCRYPTED_FILES = "list encrypted files";
+    public static final String STORAGE_LIST_BUTTON_UNENCRYPTED_IMAGES = "list unencrypted images";
+    public static final String STORAGE_LIST_BUTTON_ENCRYPTED_IMAGES = "list encrypted images";
+
     public static boolean isLoggedIn(){
         if(currentUserId() != null){
             return true;
@@ -79,7 +85,7 @@ public class FirebaseUtil {
         return FirebaseFirestore.getInstance().collection(USERS_FOLDER_NAME).document(currentUserId()).collection(subfolder).document(filename);
     }
 
-    public static StorageReference currentUserStorageFilesReference() {
+    public static StorageReference currentUserStorageUnencryptedFilesReference() {
         return FirebaseStorage.getInstance().getReference().child(currentUserId()).child(FILES_FOLDER_NAME);
     }
 
@@ -94,7 +100,7 @@ public class FirebaseUtil {
         return FirebaseStorage.getInstance().getReference().child(currentUserId()).child(ENCRYPTED_FILES_FOLDER_NAME + "/" + filename);
     }
 
-    public static StorageReference currentUserStorageImagesReference() {
+    public static StorageReference currentUserStorageUnencryptedImagesReference() {
         return FirebaseStorage.getInstance().getReference().child(currentUserId()).child(IMAGES_FOLDER_NAME);
     }
 
