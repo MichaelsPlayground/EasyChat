@@ -45,6 +45,47 @@
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
+            <RadioGroup
+                android:id="@+id/rgStorageUpload"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/rbStorageUploadFile"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:checked="true"
+                    android:text="file" />
+
+                <RadioButton
+                    android:id="@+id/rbStorageUploadImage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="image" />
+
+                <RadioButton
+                    android:id="@+id/rbStorageUploadFileEnc"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:checked="false"
+                    android:text="file enc" />
+
+                <RadioButton
+                    android:id="@+id/rbStorageUploadImageEnc"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="image enc" />
+
+            </RadioGroup>
+
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -70,20 +111,14 @@
                     android:layout_marginStart="2dp"
                     android:layout_weight="1"
                     android:enabled="true"
+                    android:visibility="gone"
                     android:background="@drawable/btn_rounded_corner"
                     android:text="image (unencrypted)" />
 
             </LinearLayout>
 
-            <com.google.android.material.divider.MaterialDivider
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                app:dividerInsetEnd="8dp"
-                app:dividerInsetStart="8dp" />
-
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/etStoragePassphraseLayout"
+                android:id="@+id/etStorageUploadPassphraseLayout"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -98,12 +133,13 @@
                 app:counterEnabled="true"
                 app:counterMaxLength="16"
                 app:endIconMode="clear_text"
+                android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etStoragePassphrase"
+                    android:id="@+id/etStorageUploadPassphrase"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:ellipsize="end"
@@ -129,6 +165,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="2dp"
                     android:layout_weight="1"
+                    android:visibility="gone"
                     android:background="@drawable/btn_rounded_corner"
                     android:text="file (encrypted)" />
 
@@ -139,6 +176,7 @@
                     android:layout_marginStart="2dp"
                     android:layout_weight="1"
                     android:enabled="true"
+                    android:visibility="gone"
                     android:background="@drawable/btn_rounded_corner"
                     android:text="image (encrypted)" />
 
@@ -173,6 +211,163 @@
                 android:textAlignment="center"
                 android:textSize="18sp"
                 android:textStyle="bold" />
+
+            <RadioGroup
+                android:id="@+id/rgStorageDownload"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/rbStorageDownloadFile"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:checked="true"
+                    android:text="file" />
+
+                <RadioButton
+                    android:id="@+id/rbStorageDownloadImage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="image" />
+
+                <RadioButton
+                    android:id="@+id/rbStorageDownloadFileEnc"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:checked="false"
+                    android:text="file enc" />
+
+                <RadioButton
+                    android:id="@+id/rbStorageDownloadImageEnc"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="image enc" />
+
+            </RadioGroup>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="8dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/storage_Download_unencrypted_file_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="2dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_rounded_corner"
+                    android:text="file (unencrypted)" />
+
+                <Button
+                    android:id="@+id/storage_Download_unencrypted_image_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="2dp"
+                    android:layout_weight="1"
+                    android:enabled="true"
+                    android:visibility="gone"
+                    android:background="@drawable/btn_rounded_corner"
+                    android:text="image (unencrypted)" />
+
+            </LinearLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/etStorageDownloadPassphraseLayout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:hint="en-/decryption passphrase, min. 6 chars"
+                app:boxCornerRadiusBottomEnd="5dp"
+                app:boxCornerRadiusBottomStart="5dp"
+                app:boxCornerRadiusTopEnd="5dp"
+                app:boxCornerRadiusTopStart="5dp"
+                app:counterEnabled="true"
+                app:counterMaxLength="16"
+                app:endIconMode="clear_text"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etStorageDownloadPassphrase"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:focusable="true"
+                    android:inputType="text|textNoSuggestions|textPersonName"
+                    android:maxLength="16"
+                    android:text=""
+                    tools:ignore="KeyboardInaccessibleWidget" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="8dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/storage_Download_encrypt_file_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="2dp"
+                    android:layout_weight="1"
+                    android:visibility="gone"
+                    android:background="@drawable/btn_rounded_corner"
+                    android:text="file (encrypted)" />
+
+                <Button
+                    android:id="@+id/storage_download_encrypt_image_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="2dp"
+                    android:layout_weight="1"
+                    android:enabled="true"
+                    android:visibility="gone"
+                    android:background="@drawable/btn_rounded_corner"
+                    android:text="image (encrypted)" />
+
+            </LinearLayout>
+
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:dividerInsetEnd="8dp"
+                app:dividerInsetStart="8dp" />
+
+            <com.google.android.material.progressindicator.LinearProgressIndicator
+                android:id="@+id/storageDownloadProgress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp" />
+
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:dividerInsetEnd="8dp"
+                app:dividerInsetStart="8dp" />
 
             <LinearLayout
                 android:layout_width="match_parent"

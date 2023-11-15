@@ -26,6 +26,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -87,8 +89,12 @@ import de.androidcrypto.easychat.utils.FirebaseUtil;
 public class StorageFragment extends Fragment {
 
     // upload section
+    private RadioGroup rgUpload;
+    private RadioButton rbUploadFile, rbUploadImage, rbUploadFileEncrypted, rbUploadImageEncrypted;
     private Button uploadUnencryptedFile, uploadUnencryptedImage;
     private Button uploadEncryptedFile, uploadEncryptedImage;
+    private com.google.android.material.textfield.TextInputLayout uploadPassphraseLayout;
+    private com.google.android.material.textfield.TextInputEditText uploadPassphrase;
 
     // download section
 
@@ -96,8 +102,7 @@ public class StorageFragment extends Fragment {
     private Button storageListDirectories, selectImage, uploadImage, listImages, listFilesForDownload, selectFile, uploadFile;
 
     private Button listFilesForDownload2;
-    private com.google.android.material.textfield.TextInputLayout passphraseLayout;
-    private com.google.android.material.textfield.TextInputEditText passphrase;
+
 
     private Button encryptFile, decryptFile, downloadFile, downloadDecryptFile;
 
@@ -149,10 +154,19 @@ public class StorageFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_storage, container, false);
 
         // upload section
+        rgUpload = view.findViewById(R.id.rgStorageUpload);
+        rbUploadFile = view.findViewById(R.id.rbStorageUploadFile);
+        rbUploadImage = view.findViewById(R.id.rbStorageUploadImage);
+        rbUploadFileEncrypted = view.findViewById(R.id.rbStorageUploadFileEnc);
+        rbUploadImageEncrypted = view.findViewById(R.id.rbStorageUploadImageEnc);
         uploadUnencryptedFile = view.findViewById(R.id.storage_upload_unencrypted_file_btn);
         uploadUnencryptedImage = view.findViewById(R.id.storage_upload_unencrypted_image_btn);
         uploadEncryptedFile = view.findViewById(R.id.storage_upload_encrypt_file_btn);
         uploadEncryptedImage = view.findViewById(R.id.storage_upload_encrypt_image_btn);
+        uploadPassphraseLayout = view.findViewById(R.id.etStorageUploadPassphraseLayout);
+        uploadPassphrase = view.findViewById(R.id.etStorageUploadPassphrase);
+
+        //uploadSectionVisibilityOff();
 
         // download section
 
@@ -172,15 +186,12 @@ public class StorageFragment extends Fragment {
         encryptFile = view.findViewById(R.id.storage_encrypt_file_btn);
         decryptFile = view.findViewById(R.id.storage_decrypt_file_btn);
 
-        passphraseLayout = view.findViewById(R.id.etStoragePassphraseLayout);
-        passphrase = view.findViewById(R.id.etStoragePassphrase);
-
 
         downloadFile = view.findViewById(R.id.storage_download_file_btn);
         downloadDecryptFile = view.findViewById(R.id.storage_download_decrypt_file_btn);
 
         deleteFile = view.findViewById(R.id.storage_delete_file_btn);
-        deleteImage= view.findViewById(R.id.storage_delete_image_btn);
+        deleteImage = view.findViewById(R.id.storage_delete_image_btn);
         storageWarning = view.findViewById(R.id.storage_warning);
 
 
@@ -204,6 +215,45 @@ public class StorageFragment extends Fragment {
         /**
          * section for uploads
          */
+
+        View.OnClickListener rbUploadFileListener = null;
+        rbUploadFileListener = new View.OnClickListener() {
+            public void onClick(View v) {
+                uploadSectionVisibilityOff();
+                uploadUnencryptedFile.setVisibility(View.VISIBLE);
+            }
+        };
+        rbUploadFile.setOnClickListener(rbUploadFileListener);
+
+        View.OnClickListener rbUploadImageListener = null;
+        rbUploadImageListener = new View.OnClickListener() {
+            public void onClick(View v) {
+                uploadSectionVisibilityOff();
+                uploadUnencryptedImage.setVisibility(View.VISIBLE);
+            }
+        };
+        rbUploadImage.setOnClickListener(rbUploadImageListener);
+
+        View.OnClickListener rbUploadFileEncListener = null;
+        rbUploadFileEncListener = new View.OnClickListener() {
+            public void onClick(View v) {
+                uploadSectionVisibilityOff();
+                uploadEncryptedFile.setVisibility(View.VISIBLE);
+                uploadPassphraseLayout.setVisibility(View.VISIBLE);
+            }
+        };
+        rbUploadFileEncrypted.setOnClickListener(rbUploadFileEncListener);
+
+        View.OnClickListener rbUploadImageEncListener = null;
+        rbUploadImageEncListener = new View.OnClickListener() {
+            public void onClick(View v) {
+                uploadSectionVisibilityOff();
+                uploadEncryptedImage.setVisibility(View.VISIBLE);
+                uploadPassphraseLayout.setVisibility(View.VISIBLE);
+            }
+        };
+        rbUploadImageEncrypted.setOnClickListener(rbUploadImageEncListener);
+
 
         uploadUnencryptedFile.setOnClickListener((v -> {
             uploadUnencryptedFileBtnClick();
@@ -750,7 +800,6 @@ public class StorageFragment extends Fragment {
         }));
 
 
-
         downloadFile.setOnClickListener((v -> {
             downloadFileBtnClick();
         }));
@@ -888,7 +937,7 @@ public class StorageFragment extends Fragment {
 
         //askPassphrase();
         // just a pre check
-        if (!passphrasePreCheck()) return;
+        if (!uploadPassphrasePreCheck()) return;
 
         // select a file in download folder, encrypt it and upload it to firebase cloud storage
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
@@ -905,7 +954,7 @@ public class StorageFragment extends Fragment {
     private void uploadEncryptedImageBtnClick() {
 
         // just a pre check
-        if (!passphrasePreCheck()) return;
+        if (!uploadPassphrasePreCheck()) return;
 
         // select an image in download folder, encrypt it and upload it to firebase cloud storage
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
@@ -951,11 +1000,11 @@ public class StorageFragment extends Fragment {
                                 fileInformation.setFileStorage(selectedFolder);
                             }
 
-                            if (!passphrasePreCheck()) return;
-                            int passphraseLength = passphrase.length();
+                            if (!uploadPassphrasePreCheck()) return;
+                            int passphraseLength = uploadPassphrase.length();
                             // get the passphrase as char[]
                             char[] passphraseChars = new char[passphraseLength];
-                            passphrase.getText().getChars(0, passphraseLength, passphraseChars, 0);
+                            uploadPassphrase.getText().getChars(0, passphraseLength, passphraseChars, 0);
 
                             boolean success = Cryptography.encryptGcmFileBufferedCipherOutputStreamToCacheFile(getContext(), selectedFileUri, encryptedFilename, passphraseChars, NUMBER_OF_PBKDF2_ITERATIONS);
                             Toast.makeText(getActivity(), "encryptGcmFileBufferedCipherOutputStreamToCacheFile: " + success, Toast.LENGTH_SHORT).show();
@@ -1354,18 +1403,18 @@ public class StorageFragment extends Fragment {
         return file.delete();
     }
 
-    private boolean passphrasePreCheck() {
-        if (TextUtils.isEmpty(passphrase.getText().toString())) {
-            passphraseLayout.setError("please enter a passphrase, minimum is 3 characters");
+    private boolean uploadPassphrasePreCheck() {
+        if (TextUtils.isEmpty(uploadPassphrase.getText().toString())) {
+            uploadPassphraseLayout.setError("please enter a passphrase, minimum is 3 characters");
             return false;
         } else {
-            passphraseLayout.setError("");
+            uploadPassphraseLayout.setError("");
         }
-        if (passphrase.length() < 3) {
-            passphraseLayout.setError("please enter a passphrase, minimum is 3 characters");
+        if (uploadPassphrase.length() < 3) {
+            uploadPassphraseLayout.setError("please enter a passphrase, minimum is 3 characters");
             return false;
         } else {
-            passphraseLayout.setError("");
+            uploadPassphraseLayout.setError("");
             return true;
         }
     }
@@ -1570,6 +1619,14 @@ public class StorageFragment extends Fragment {
             //progressBar.setVisibility(View.GONE);
             updateProfileBtn.setVisibility(View.VISIBLE);
         }
+    }
+
+    private void uploadSectionVisibilityOff() {
+        uploadUnencryptedFile.setVisibility(View.GONE);
+        uploadUnencryptedImage.setVisibility(View.GONE);
+        uploadEncryptedFile.setVisibility(View.GONE);
+        uploadEncryptedImage.setVisibility(View.GONE);
+        uploadPassphraseLayout.setVisibility(View.GONE);
     }
 
 }
