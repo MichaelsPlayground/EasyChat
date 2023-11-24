@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -32,6 +33,9 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Arrays;
 
 import okhttp3.Call;
@@ -133,8 +137,8 @@ public class ChatActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<DocumentReference> task) {
                         if (task.isSuccessful()) {
                             messageInput.setText("");
-                            sendNotification(message);
-                            //sendNotificationV1(message);
+                            //sendNotification(message);
+                            sendNotificationApiV1(message);
                         }
                     }
                 });
@@ -157,6 +161,78 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
     }
+
+    void sendNotificationApiV1(String message) {
+        FirebaseUtil.currentUserDetails().get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                UserModel currentUser = task.getResult().toObject(UserModel.class);
+                try {
+                    // get the JSON object
+                    JSONObject jsonMessage = createJson(otherUser.getFcmToken(), "from " + currentUser.getUsername(), message);
+                    String FCM_API = "https://fcm.googleapis.com/v1/projects/easychat-ce2c5/messages:send";
+                    try {
+                        String SERVER_KEY = getAccessToken();
+                        URL url = new URL(FCM_API);
+                        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                        connection.setRequestMethod("POST");
+                        connection.setRequestProperty("Content-Type", "application/json");
+                        connection.setRequestProperty("Authorization", "Bearer " + SERVER_KEY);
+                        connection.setDoOutput(true);
+
+                        // Send the request
+                        try (OutputStream os = connection.getOutputStream()) {
+                            byte[] input = jsonMessage.toString().getBytes("utf-8");
+                            os.write(input, 0, input.length);
+                        }
+
+                        // Get the response
+                        int responseCode = connection.getResponseCode();
+                        if (responseCode == HttpURLConnection.HTTP_OK) {
+                            Log.d("FCM", "Message sent successfully");
+                        } else {
+                            Log.e("FCM", "Error sending message. Response Code: " + responseCode);
+                        }
+                    } catch (Exception e) {
+                        Log.e("FCM", "send Exception: " + e.getMessage());
+                    }
+                } catch (Exception e) {
+                System.out.println("*** Exception2: " + e.getMessage());
+            }
+
+
+
+        // get the JSO object
+
+            }
+        });
+
+
+    }
+
+    public JSONObject createJson(String token, String title, String messageBody) {
+        JSONObject message = new JSONObject();
+        JSONObject to = new JSONObject();
+        JSONObject data = new JSONObject();
+        try {
+            data.put("title", title);
+            data.put("body", messageBody);
+
+            to.put("token", token);
+            to.put("notification", data);
+
+            message.put("message", to);
+            if (token != null) {
+                //Log.i(TAG, "createJson message: " + message);
+                return message;
+                //sentNotification(message);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
 
     void sendNotification(String message) {
 

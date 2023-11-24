@@ -10,6 +10,9 @@ These fragments are enabled:
 
 ## Chats fragment
 
+The original app is using the deprecated (legacy) API to send notifications to the other user. I updated the notification to the 
+newer HTTP V1 Api.
+
 ## Files fragment
 
 The files ("Storage") fragment consists of two parts - an **uploading section** and a **downloading section**. They are 
